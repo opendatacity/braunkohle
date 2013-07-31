@@ -1,0 +1,73 @@
+body {
+	margin: 0;
+}
+
+#head {
+	position: absolute;
+	left: 0;
+	right: 0;
+	padding: 3px 10px 2px 3px;
+	margin-right: 3px;
+	font-family: 'Bitter', serif;
+}
+
+	#headline {
+		margin-top: 3px;
+	}
+
+	input[type="text"] {
+		height: 16px !important;
+	}
+
+	.search-icon {
+		position:relative;
+		margin-left:-22px;
+		top:-8px;
+		z-index:2;
+	}
+
+#map {
+	display: block;
+	top: 32px;
+	left: 0;
+	right: 0;
+	margin: 2px;
+	position: absolute;
+	bottom: 32px;
+}
+
+#foot {
+	position: absolute;
+	background-color: #000;
+	bottom: 0;
+	height: 32px;
+	text-align: left;
+	left: 0;
+	right: 0;
+}
+
+#foot button {
+	margin-top: 3px;
+}
+
+#progressbar{
+		position: absolute;
+		left: 0;
+		right: 0;
+		padding: 1px;
+		background-color: white;
+		border: 1px solid black;
+		height: 6px;
+	}
+
+	#indicator {
+		width: 0px;
+		background-image: url("shaded-green.png");
+		height: 14px;
+		margin: 0;
+	}
+
+	#progressnum {
+		display: inline;
+		margin-left: 20px;
+	}

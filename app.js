@@ -15,11 +15,11 @@ app.use(express.bodyParser());
 app.use(express.methodOverride());
 
 app.get('/', function (req, res) {
-	res.sendfile(__dirname + '/static/brownie.htm');
+	res.sendfile(__dirname + '/static/iframe.htm');
 });
 
-app.get('/2', function (req, res) {
-	res.sendfile(__dirname + '/static/b2.htm');
+app.get('/braunkohle', function (req, res) {
+	res.sendfile(__dirname + '/static/braunkohle.htm');
 });
 
 server.listen(app.get('port'), function () {
