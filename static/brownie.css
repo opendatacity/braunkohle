@@ -1,0 +1,51 @@
+body {
+	background-color: #27130a;
+	font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+#map {
+	height: 400px;
+	width: 600px;
+}
+
+#progressbar, #map, #head {
+	width: 600px;
+}
+
+#head {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	color: #f68d28;
+}
+
+#pwidget {
+	background-color: lightgray;
+	width: 604px;
+	padding: 2px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	text-align: left;
+	border: 1px solid gray;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#progressbar {
+	padding: 1px;
+	background-color: white;
+	border: 1px solid black;
+	height: 14px;
+}
+
+#indicator {
+	width: 0px;
+	background-image: url("shaded-green.png");
+	height: 14px;
+	margin: 0;
+}
+
+#progressnum {
+	display: inline;
+	margin-left: 20px;
+}
