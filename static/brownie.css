@@ -1,51 +1,147 @@
 body {
-	background-color: #27130a;
-	font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
-}
-
-#map {
-	height: 400px;
-	width: 600px;
-}
-
-#progressbar, #map, #head {
-	width: 600px;
-}
-
-#head {
-	text-align: center;
-	margin-left: auto;
-	margin-right: auto;
-	color: #f68d28;
-}
-
-#pwidget {
-	background-color: lightgray;
-	width: 604px;
-	padding: 2px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
-	text-align: left;
-	border: 1px solid gray;
-	margin-left: auto;
-	margin-right: auto;
-}
-
-#progressbar {
-	padding: 1px;
-	background-color: white;
-	border: 1px solid black;
-	height: 14px;
-}
-
-#indicator {
-	width: 0px;
-	background-image: url("shaded-green.png");
-	height: 14px;
 	margin: 0;
 }
 
-#progressnum {
-	display: inline;
-	margin-left: 20px;
+#head {
+	position: absolute;
+	left: 0;
+	right: 0;
+	padding: 3px 10px 2px;
+	font-family: 'Bitter', serif;
 }
+
+	#headline {
+		margin-top: 3px;
+	}
+
+	input[type="text"] {
+		height: 16px !important;
+	}
+
+	.search-icon {
+		position:relative;
+		margin-left:-22px;
+		top:-8px;
+		z-index:2;
+	}
+
+#map {
+	display: block;
+	top: 32px;
+	left: 0;
+	right: 0;
+	margin: 2px;
+	position: absolute;
+	bottom: 32px;
+}
+
+#foot {
+	position: absolute;
+	background-color: #000;
+	padding: 0;
+	bottom: 0;
+	height: 32px;
+	text-align: left;
+	left: 0;
+	right: 0;
+}
+
+.jp-interface a {
+	color: #fff;
+	text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+	text-decoration: none;
+}
+
+.jp-controls, .jp-toggles {
+	padding: 0;
+	margin: 0;
+	font-family: "FontAwesome"
+}
+.jp-toggles {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+}
+.jp-controls li, .jp-toggles li {
+	display: inline;
+}
+.jp-play,.jp-stop,.jp-mute,.jp-unmute {
+	width: 36px;
+	height: 32px;
+	display: inline-block;
+	text-align: center;
+	line-height: 32px;
+}
+.jp-play:hover,.jp-stop:hover {
+	background-color: #00143f;
+}
+
+.jp-progress {
+	background-color: #992E18;
+	border-radius: 20px 20px 20px 20px;
+	overflow: hidden;
+	position: absolute;
+	left: 80px;
+	top: 10px;
+	width: 65%;
+	-webkit-box-shadow: 0 1px 1px 0 rgba(0,0,0,0.2) inset;
+	box-shadow: 0 1px 1px 0 rgba(0,0,0,0.2) inset;
+}
+.jp-play-bar {
+	height: 12px;
+	background-color: #fff;
+	border-radius: 20px 20px 20px 20px;
+}
+.jp-volume-bar {
+	position: absolute;
+	rightright: 40px;
+	top: 16px;
+	width: 45px;
+	height: 8px;
+	border-radius: 20px 20px 20px 20px;
+	-webkit-box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1) inset;
+	box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1) inset;
+	background-color: #992E18;
+	overflow: hidden;
+}
+.jp-volume-bar-value {
+	background-color: #fff;
+	height: 8px;
+	border-radius: 20px 20px 20px 20px;
+}
+.jp-current-time {
+	color: #FFF;
+	font-size: 12px;
+	line-height: 14px;
+	position: absolute;
+	rightright: 115px;
+	top: 13px;
+	text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+#foot2 {
+	display: none;
+}
+
+
+#progressbar{
+		position: absolute;
+		left: 0;
+		right: 0;
+		padding: 1px;
+		background-color: white;
+		border: 1px solid black;
+		height: 6px;
+	}
+
+	#indicator {
+		width: 0px;
+		background-image: url("shaded-green.png");
+		height: 14px;
+		margin: 0;
+	}
+
+	#progressnum {
+		display: inline;
+		margin-left: 20px;
+	}
