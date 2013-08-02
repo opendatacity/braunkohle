@@ -38,36 +38,54 @@ body {
 
 #foot {
 	position: absolute;
-	background-color: #000;
+	padding: 0;
 	bottom: 0;
-	height: 32px;
-	text-align: left;
 	left: 0;
 	right: 0;
+	height: 32px;
+	background: #202020;
+	border-color: #202020;
 }
-
-#foot button {
-	margin-top: 3px;
-}
-
-#progressbar{
-		position: absolute;
-		left: 0;
-		right: 0;
-		padding: 1px;
-		background-color: white;
-		border: 1px solid black;
-		height: 6px;
-	}
 
 	#indicator {
+		background-color: #0480be;
 		width: 0px;
-		background-image: url("shaded-green.png");
-		height: 14px;
+		height: 4px;
 		margin: 0;
 	}
 
-	#progressnum {
+	#foot button {
+		-webkit-transition-duration: 200ms;
+		-webkit-transition-property: background;
+		-webkit-transition-timing-function: ease-in-out;
+		-moz-transition-duration: 200ms;
+		-moz-transition-property: background;
+		-moz-transition-timing-function: ease-in-out;
+		-o-transition-duration: 200ms;
+		-o-transition-property: background;
+		-o-transition-timing-function: ease-in-out;
+		transition-duration: 200ms;
+		transition-property: background;
+		border-color:transparent;
+		background:#202020;
+		color:#eeeeee;
+		margin-top: 2px;
+	}
+
+	#foot button:hover {
+		background: #333333;
+		color: #ffffff;
+	}
+
+	#foot button[disabled="disabled"] {
+		color: #959595 !important;
+	}
+	#foot button[disabled="disabled"]:hover {
+		background: #202020 !important;
+	}
+
+	#progress-text {
+		color: #ffffff;
 		display: inline;
-		margin-left: 20px;
+		font-size: 10px;
 	}

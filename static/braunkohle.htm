@@ -5,27 +5,31 @@
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'>
-	<link type="text/css" href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="/static/leaflet/leaflet.css"/>
-	<link rel="stylesheet" href="/static/leaflet/mouseposition/L.Control.MousePosition.css"/>
-	<link rel="stylesheet" href="/static/font-awesome/font-awesome.min.css">
-	<link rel="stylesheet" href="/static/braunkohle.css"/>
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Bitter" type="text/css">
+	<link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css" type="text/css">
+	<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css" type="text/css">
+	<link rel="stylesheet" href="/static/leaflet/leaflet.css" type="text/css"/>
+	<link rel="stylesheet" href="/static/leaflet/mouseposition/L.Control.MousePosition.css" type="text/css"/>
+	<link rel="stylesheet" href="/static/braunkohle.css" type="text/css"/>
 
 	<script type="text/javascript" src="/static/jquery/jquery.js"></script>
+	<script type="text/javascript" src="/static/bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="/static/leaflet/leaflet.js"></script>
-	<script type="text/javascript" src="/static/leaflet/mouseposition/L.Control.MousePosition.js"></script>
 	<script type="text/javascript" src="/static/raphael/raphael-min.js"></script>
 	<script type="text/javascript" src="/static/braunkohle.rlayer.js"></script>
 	<script type="text/javascript" src="/static/braunkohle.js"></script>
+	<script type="text/javascript" src="/static/braunkohle-data.js"></script>
+	<script type="text/javascript" src="/static/geocode.js"></script>
 </head>
 <body>
 
 <div id="head">
 	<form class="form-inline">
 		<label id="headline">Braunkohle isst Heimat auf</label>
+
 		<div class="input-append pull-right">
-			<input type="text" class="span3" placeholder="Ortssuche"><span class="search-icon"><i class="icon-search"></i></span>
+			<input id="search" type="text" autocomplete="off" class="span3"
+				   data-provide="typeahead" placeholder="Ortssuche"><span class="search-icon"><i class="icon-search"></i></span>
 		</div>
 	</form>
 </div>
@@ -33,14 +37,19 @@
 <div id="map"></div>
 
 <div id="foot">
-	<button id="play">Play</button>
-	<button id="pause">Pause</button>
-	<button id="stop">Stop</button>
 	<div id="indicator"></div>
-	<div id="progressnum">0</div>
+	<button id="play" title="Abspielen"><i class="icon-play"></i></button>
+	<button id="pause" class="hide" title="Pause"><i class="icon-pause"></i></button>
+	<button id="stop" disabled="disabled" title="Stop"><i class="icon-stop"></i></button>
+	<div id="progress-text">0</div>
+	<button class="pull-right hide" id="unmute" title="Ton deaktiviert">
+		<span class="icon-stack">
+		  <i class="icon-volume-up"></i>
+		  <i class="icon-ban-circle icon-large text-error"></i>
+		</span>
+	</button>
+	<button class="pull-right" id="mute" title="Ton aktiviert"><i class="icon-volume-up"></i></button>
 </div>
-
-<audio id="audio" src="/static/Rocket-SoundBible.com-941967813.mp3"></audio>
 
 </body>
 </html>
