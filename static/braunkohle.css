@@ -3,6 +3,10 @@ body {
 	height: 100%;
 }
 
+body, .leaflet-container, input, button, select, textarea {
+	font-family: 'Open Sans', serif !important;
+}
+
 #border {
 	position: absolute;
 	border: 1px solid #767676;
@@ -30,6 +34,15 @@ body {
 
 		input[type="text"] {
 			height: 16px !important;
+			width: 200px !important;
+		}
+
+		@media screen and (max-width: 420px) {
+
+			input[type="text"] {
+				width: 140px !important;
+			}
+
 		}
 
 		.search-icon {
@@ -48,6 +61,22 @@ body {
 		position: absolute;
 		bottom: 32px;
 	}
+
+		.leaflet-top, .leaflet-bottom {
+			z-index: 1000;
+		}
+
+		.map-overlay {
+			color: white;
+			margin-right: 10px;
+			padding: 8px;
+			background-color: rgba(0, 0, 0, 0.7);
+		}
+
+		.map-overlay a {
+			color: #dcd510;
+		}
+
 
 	#foot {
 		position: absolute;

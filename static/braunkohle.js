@@ -3,6 +3,14 @@ var MINZOOM = 8;
 var MAXZOOM = 15;
 var DEFAULT_ZOOM = 11;
 var DURATION = 170;
+var INTRO = 'Klicken Sie auf die Karte um einen Startpunkt auszuwählen und auf den Start-Knopf unten links um die Animation zu starten.';
+var LEGALIES =
+	'powered by' + '<br/>' +
+		'<a href="http://leafletjs.com/" target="_blank">Leaflet</a>' + '<br/>' +
+		'<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> (<a href="http://opendatacommons.org/licenses/odbl/">ODbL</a>)' + '<br/>' +
+		'<a href=" http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/">CC-BY</a>)' + '<br/>' +
+		'' + '<br/>' +
+		'' + '<br/>';
 
 $(document).ready(function () {
 	init();
@@ -116,6 +124,17 @@ function init() {
 		btn_mute.show();
 		audio.setMute(false);
 	});
+	var infoclick = false;
+	$('#info').click(function (event) {
+		if (infoclick && (player.hasTextOverlay())) {
+			player.hideTextOverlay();
+		} else {
+			infoclick = true;
+			player.showTextOverlay(
+				LEGALIES + INTRO
+			);
+		}
+	});
 	$('#search').typeahead({
 		source: geocode.name,
 		updater: function (item) {
@@ -136,7 +155,7 @@ function AudioPlayer() {
 		audioelement.src = '/static/sound.mp3';
 	}
 	var caller = this;
-	new MediaElement(audioelement, {success: function(media) {
+	new MediaElement(audioelement, {success: function (media) {
 		caller.audio = media;
 		caller.audio.volume = (caller.muted ? 0 : 1);
 	}});
@@ -177,13 +196,13 @@ function Player(latlng, geometry, zoom) {
 	this.initMap(latlng, zoom);
 	this.addOSMLayer();
 	this.addRLayer(latlng, geometry);
+	this.showTextOverlay(INTRO)
 	this.marker = L.marker(latlng).addTo(this.map);
-	this.marker.bindPopup('Klicken Sie auf die Karte um einen Startpunkt auszuwählen und auf den Start-Knopf unten links um die Animation zu starten.')
-		.openPopup();
 	this.addMouseClick();
 }
 
 Player.prototype = {
+
 	initMap: function (latlng, zoom) {
 		this.map = L.map('map', {
 			maxBounds: [
@@ -191,7 +210,8 @@ Player.prototype = {
 				[56, 16]
 			],
 			minZoom: MINZOOM,
-			maxZoom: MAXZOOM
+			maxZoom: MAXZOOM,
+			attributionControl: false
 		}).setView(latlng, zoom);
 		var caller = this;
 		this.map.on('zoomstart', function (event) {
@@ -213,9 +233,32 @@ Player.prototype = {
 		})
 	},
 
+	hideTextOverlay: function () {
+		if (this.legend) {
+			this.legend.removeFrom(this.map);
+			this.legend = null;
+		}
+	},
+
+	hasTextOverlay: function () {
+		return (this.legend ? true : false);
+	},
+
+	showTextOverlay: function (text) {
+		this.hideTextOverlay();
+		this.legend = L.control({position: 'bottomleft'});
+		this.legend.onAdd = function (map) {
+			var div = L.DomUtil.create('div', 'map-overlay');
+			$(div).html(text);
+			return div;
+		};
+		this.legend.addTo(this.map);
+	},
+
 	addMouseClick: function () {
 		var caller = this;
 		this.map.on('click', function (event) {
+			caller.hideTextOverlay();
 			caller.marker.setLatLng(event.latlng);
 		});
 	},
@@ -268,13 +311,14 @@ Player.prototype = {
 	},
 
 	displayProgress: function () {
-		this.indicator.style.width = this.actualprogress + "%";//px";
-		this.progress_text.innerHTML = this.actualprogress;
+		this.indicator.style.width = this.actualprogress + "%";
+		this.progress_text.innerHTML = this.actualprogress + "%";
 	},
 
 	start: function () {
 		if (this.playstate == PLAYSTATE.PLAYING)
 			return;
+		this.hideTextOverlay();
 		if (this.playstate != PLAYSTATE.PAUSED) {
 			this.map.removeLayer(this.marker);
 			this.actualprogress = 0;
@@ -336,4 +380,5 @@ Player.prototype = {
 		return false;
 	}
 
-};
+}
+;

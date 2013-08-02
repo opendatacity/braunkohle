@@ -5,6 +5,7 @@
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+	<link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Open+Sans' type='text/css'>
 	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Bitter" type="text/css">
 	<link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css" type="text/css">
 	<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css" type="text/css">
@@ -27,20 +28,27 @@
 	<form class="form-inline">
 		<div id="headline">Braunkohle isst Heimat auf</div>
 
-		<div class="input-append pull-right">
-			<input id="search" type="text" autocomplete="off" class="span3"
+		<div class="searchbox input-append pull-right">
+			<input id="search" type="text" autocomplete="off"
 				   data-provide="typeahead" placeholder="Ortssuche"><span class="search-icon"><i class="icon-search"></i></span>
 		</div>
 	</form>
 </div>
 
-<div id="map"></div>
+<div id="map">
+	<noscript>
+		Diese Anwendung erfordert JavaScript.<br />
+		Bitte aktivieren Sie es oder
+		installieren Sie <a href="http://browsehappy.com/?locale=de_DE" target="_blank">hier einen aktuellen Browser</a>
+	</noscript>
+</div>
+
 
 <div id="foot">
 	<div id="progress">
 		<div id="indicator"></div>
 	</div>
-	<button id="play" title="Abspielen"><i class="icon-play"></i></button>
+	<button id="play" title="Start"><i class="icon-play"></i></button>
 	<button id="pause" class="hide" title="Pause"><i class="icon-pause"></i></button>
 	<button id="stop" disabled="disabled" title="Stop"><i class="icon-stop"></i></button>
 	<div id="progress-text">0</div>
@@ -51,6 +59,7 @@
 		</span>
 	</button>
 	<button class="pull-right" id="mute" title="Ton aktiviert"><i class="icon-volume-up"></i></button>
+	<button class="pull-right" id="info" title="Infomationen zur App"><i class="icon-info"></i></button>
 </div>
 </div>
 </body>
