@@ -2,9 +2,27 @@
 <html>
 <head>
 	<title>Braunkohle IFrame Test</title>
+	<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css" type="text/css">
 	<meta charset="utf-8"/>
 </head>
 <body>
-<iframe src="/static/braunkohle.htm" width="520" height="490" scrolling="no" frameborder="0" style="margin:0"></iframe>
+
+<div class="content">
+	<div class="container">
+		<br/>
+		<div>
+			<iframe src="/static/braunkohle.htm?city=hamburg" width="480" height="520" scrolling="no" frameborder="0"></iframe>
+			<br/>
+			<pre>&lt;iframe src="/static/braunkohle.htm<b>?city=hamburg</b>" width="480" height="520" scrolling="no" frameborder="0"&gt;&lt;/iframe&gt;</pre>
+		</div>
+		<br/>
+
+		<div>
+			<iframe src="/static/braunkohle.htm?lat=52.50085&lng=13.42232" width="860" height="520" scrolling="no" frameborder="0"></iframe>
+			<br/>
+			<pre>&lt;iframe src="/static/braunkohle.htm?<b>lat=52.50085&lng=13.42232</b>" width="860" height="520" scrolling="no" frameborder="0"&gt;&lt;/iframe&gt;</pre>
+		</div>
+	</div>
+</div>
 </body>
 </html>

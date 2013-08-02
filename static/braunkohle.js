@@ -1,15 +1,85 @@
-var DEFAULT_POINT = new L.LatLng(52.50085, 13.42232);
 var WELZOW_POINT = new L.LatLng(51.58474991408093, 14.226608276367188);
+var MINZOOM = 8;
+var MAXZOOM = 15;
+var DEFAULT_ZOOM = 11;
+var DURATION = 170;
 
 $(document).ready(function () {
+	init();
+});
 
+function getUrlVars() { // Read a page's GET URL variables and return them as an associative array.
+	var vars = {},
+		hash;
+	var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+	for (var i = 0; i < hashes.length; i++) {
+		hash = hashes[i].split('=');
+		vars[hash[0]] = hash[1];
+	}
+	return vars;
+}
+
+function searchCity(search) {
+	if ((!search) || (!search.length))
+		return null;
+	//full test
+	var index = geocode.name.indexOf(search);
+	if (index < 0) {
+		//lax test
+		search = search.toLowerCase();
+		for (var i = 0; i < geocode.name.length; i++) {
+			if (geocode.name[i].toLowerCase() === search) {
+				index = i;
+				break;
+			}
+		}
+	}
+	if (index < 0) {
+		//very lax test
+		search = search.toLowerCase();
+		for (var i = 0; i < geocode.name.length; i++) {
+			if (geocode.name[i].toLowerCase().indexOf(search) != -1) {
+				index = i;
+				break;
+			}
+		}
+	}
+	if (index >= 0) {
+		console.log('found:' + search + ' ' + index);
+		return new L.LatLng(geocode.lat[index], geocode.lng[index]);
+	}
+	return null;
+}
+
+function init() {
+	var p = WELZOW_POINT;
+	var zoom = DEFAULT_ZOOM;
+	try {
+		var query = getUrlVars();
+		if ((query.z) && (!isNaN(query.z))) {
+			var qz = parseInt(query.z);
+			if ((qz >= MINZOOM) && (qz >= MAXZOOM))
+				zoom = qz;
+		}
+		if (query.city) {
+			var qp = searchCity(query.city);
+			if (qp) p = qp;
+		}
+		if ((query.lat) && (query.lng)) {
+			qp = new L.LatLng(query.lat, query.lng);
+			if (qp) p = qp;
+		}
+	}
+	catch (e) {
+		//nop;
+	}
 	var btn_play = $('#play');
 	var btn_pause = $('#pause');
 	var btn_stop = $('#stop');
 	var btn_mute = $('#mute');
 	var btn_unmute = $('#unmute');
 	var audio = new AudioPlayer();
-	var player = new Player(WELZOW_POINT, braunkohle_geojson.features[0].geometry);
+	var player = new Player(p, braunkohle_geojson.features[0].geometry, zoom);
 	player.onEnd = function () {
 		audio.stop();
 		btn_play.show();
@@ -52,12 +122,12 @@ $(document).ready(function () {
 			player.jumpTo(item);
 			return item;
 		}
-	})
-});
+	});
+}
 
 function AudioPlayer() {
 	this.muted = false;
-	var audioelement = new Audio("");
+	var audioelement = document.createElement('audio');// new Audio("");
 	document.body.appendChild(audioelement);
 	var canPlayType = audioelement.canPlayType("audio/ogg");
 	if (canPlayType.match(/maybe|probably/i)) {
@@ -66,10 +136,10 @@ function AudioPlayer() {
 		audioelement.src = '/static/sound.mp3';
 	}
 	var caller = this;
-	audioelement.addEventListener('canplay', function () {
-		caller.audio = audioelement;
+	new MediaElement(audioelement, {success: function(media) {
+		caller.audio = media;
 		caller.audio.volume = (caller.muted ? 0 : 1);
-	}, false);
+	}});
 }
 
 AudioPlayer.prototype = {
@@ -96,7 +166,7 @@ AudioPlayer.prototype = {
 
 var PLAYSTATE = {IDLE: 0, PLAYING: 1, PAUSED: 2};
 
-function Player(latlng, geometry) {
+function Player(latlng, geometry, zoom) {
 	this.map = null;
 	this.r = null;
 	this.maxprogress = 100;   // total to reach
@@ -104,17 +174,25 @@ function Player(latlng, geometry) {
 	this.progress_text = document.getElementById("progress-text");
 	this.indicator = document.getElementById("indicator");
 	this.playstate = PLAYSTATE.IDLE;
-	this.initMap(latlng);
+	this.initMap(latlng, zoom);
 	this.addOSMLayer();
 	this.addRLayer(latlng, geometry);
 	this.marker = L.marker(latlng).addTo(this.map);
+	this.marker.bindPopup('Klicken Sie auf die Karte um einen Startpunkt auszuwählen und auf den Start-Knopf unten links um die Animation zu starten.')
+		.openPopup();
 	this.addMouseClick();
 }
 
 Player.prototype = {
-
-	initMap: function (latlng) {
-		this.map = L.map('map').setView(latlng, 11);
+	initMap: function (latlng, zoom) {
+		this.map = L.map('map', {
+			maxBounds: [
+				[46, 5],
+				[56, 16]
+			],
+			minZoom: MINZOOM,
+			maxZoom: MAXZOOM
+		}).setView(latlng, zoom);
 		var caller = this;
 		this.map.on('zoomstart', function (event) {
 			caller.r.attr('opacity', 0);
@@ -148,6 +226,7 @@ Player.prototype = {
 			if (this.onEnd) {
 				this.onEnd();
 			}
+			this.map.addLayer(this.marker);
 			//console.log('anim end');
 			return;
 		}
@@ -161,7 +240,7 @@ Player.prototype = {
 		var scale = 's' + this.actualprogress / this.maxprogress;
 		//console.log(scale);
 		var caller = this;
-		var anim = Raphael.animation({transform: scale}, 100, '<', function () {
+		var anim = Raphael.animation({transform: scale}, DURATION, '<', function () {
 			caller.animate();
 		});
 		this.r.animate(anim);
@@ -200,6 +279,12 @@ Player.prototype = {
 			this.map.removeLayer(this.marker);
 			this.actualprogress = 0;
 			this.map.setView(this.marker.getLatLng(), this.map.getZoom());
+
+//			var southWest = new L.LatLng(route.south, route.west),
+//				northEast = new L.LatLng(route.north, route.east);
+//			geotrace.bounds = new L.LatLngBounds(southWest, northEast);
+//			map.fitBounds(this.geotrace.bounds);
+
 			this.r.moveCenter(this.marker.getLatLng());
 			this.r.attr('opacity', 1);
 			this.r.attr('transform', "s0");
@@ -227,14 +312,28 @@ Player.prototype = {
 	},
 
 	jumpTo: function (search) {
+		if ((!search) || (!search.length))
+			return false;
+		//full test
 		var index = geocode.name.indexOf(search);
+		if (index < 0) {
+			//lax test
+			search = search.toLowerCase();
+			index = geocode.name.some(function (elem) {
+				return elem.toLowerCase().indexOf(search) != -1;
+			});
+		}
 		if (index >= 0) {
+			console.log('found:' + search);
 			var p = new L.LatLng(geocode.lat[index], geocode.lng[index]);
+			console.log(p);
 			this.marker.setLatLng(p);
 			this.map.setView(p, this.map.getZoom());
+			return true;
 		} else {
-			alert('kenn ich leider nich'); //FIX ME
+			console.log('kenn ich leider nich ' + search); //FIX ME
 		}
+		return false;
 	}
 
 };

@@ -9,7 +9,6 @@
 	<link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css" type="text/css">
 	<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css" type="text/css">
 	<link rel="stylesheet" href="/static/leaflet/leaflet.css" type="text/css"/>
-	<link rel="stylesheet" href="/static/leaflet/mouseposition/L.Control.MousePosition.css" type="text/css"/>
 	<link rel="stylesheet" href="/static/braunkohle.css" type="text/css"/>
 
 	<script type="text/javascript" src="/static/jquery/jquery.js"></script>
@@ -19,13 +18,14 @@
 	<script type="text/javascript" src="/static/braunkohle.rlayer.js"></script>
 	<script type="text/javascript" src="/static/braunkohle.js"></script>
 	<script type="text/javascript" src="/static/braunkohle-data.js"></script>
+	<script type="text/javascript" src="/static/mediaelement/mediaelement.js"></script>
 	<script type="text/javascript" src="/static/geocode.js"></script>
 </head>
 <body>
-
+<div id="border">
 <div id="head">
 	<form class="form-inline">
-		<label id="headline">Braunkohle isst Heimat auf</label>
+		<div id="headline">Braunkohle isst Heimat auf</div>
 
 		<div class="input-append pull-right">
 			<input id="search" type="text" autocomplete="off" class="span3"
@@ -37,7 +37,9 @@
 <div id="map"></div>
 
 <div id="foot">
-	<div id="indicator"></div>
+	<div id="progress">
+		<div id="indicator"></div>
+	</div>
 	<button id="play" title="Abspielen"><i class="icon-play"></i></button>
 	<button id="pause" class="hide" title="Pause"><i class="icon-pause"></i></button>
 	<button id="stop" disabled="disabled" title="Stop"><i class="icon-stop"></i></button>
@@ -50,6 +52,6 @@
 	</button>
 	<button class="pull-right" id="mute" title="Ton aktiviert"><i class="icon-volume-up"></i></button>
 </div>
-
+</div>
 </body>
 </html>
