@@ -220,7 +220,7 @@
 		projectLatLngs: function () {
 			//ffalt* reuse path
 			if (this._path) {
-				this._path.animate({path: this.getPathString()}, 100);
+				this._path.animate({path: this.getPathString()}, 300);
 				return;
 			}
 			//*ffalt
@@ -230,10 +230,59 @@
 			this._set.push(this._path);
 		},
 
-		getPathString: function () {
+
+		//ffalt* implement L.Layer.getBounds method
+		getBounds: function () {
+			var bounds = new L.LatLngBounds();
+			var i = 0, len = this._latlngs.length;
+			while (i < len) {
+				bounds.extend(this._latlngs[i++]);
+			}
+			return bounds;
+		},
+
+		moveCenter: function (latlng) {
+			var center = this.getBounds().getCenter();
+			var offset = new L.LatLng(center.lat - latlng.lat, center.lng - latlng.lng);
+			for (var i = 0; i < this._latlngs.length; i++) {
+				for (var j = 0; j < this._latlngs[i].length; j++) {
+					for (var k = 0; k < this._latlngs[i][j].length; k++) {
+						var ll = this._latlngs[i][j][k];
+						this._latlngs[i][j][k] = new L.LatLng(ll.lat - offset.lat, ll.lng - offset.lng);
+					}
+				}
+			}
+//			this.eachLayer(function (layer) {
+//				if (layer.projectLatLngs) {
+//					layer.projectLatLngs();
+//				}
+//			}, this);
+		},
+
+		randomizeBorder: function (duration, cb) {
+			if (this._path) {
+				this._path.animate({path: this.getPathString(true)}, duration, function(){
+					cb();
+				});
+			}
+		},
+		resetRandomizeBorder: function () {
+			if (this._path) {
+				this._path.animate({path: this.getPathString()}, 80);
+			}
+		},
+		//*ffalt
+
+		getPathString: function (randomBorder) {
 			for (var i = 0, len = this._latlngs.length, str = ''; i < len; i++) {
+				var rx = 0;
+				var ry = 0;
+				if (randomBorder) {
+					var rx = Math.floor(Math.random() * 10) ;
+					var ry = Math.floor(Math.random() * 10);
+				}
 				var p = this._map.latLngToLayerPoint(this._latlngs[i]);
-				str += (i ? 'L' : 'M') + p.x + ' ' + p.y;
+				str += (i ? 'L' : 'M') + (p.x + rx) + ' ' + (p.y + ry);
 			}
 			str += 'Z';
 
@@ -244,7 +293,12 @@
 	R.PolygonGlow = R.Layer.extend({
 		initialize: function (latlngs, attr, options) {
 			R.Layer.prototype.initialize.call(this, options);
-
+			if (latlngs.length == 1) {
+				if (latlngs[0] instanceof Array) {
+					latlngs = latlngs[0];
+				}
+			}
+			this._scale = 0;
 			this._latlngs = latlngs;
 			this._attr = attr || {'fill': 'rgba(255, 0, 0, 1)', 'stroke': '#f00', 'stroke-width': 3};
 		},
@@ -256,7 +310,12 @@
 		},
 
 		projectLatLngs: function () {
-			if (this._path) this._path.remove();
+			//ffalt* reuse path
+			if (this._path) {
+				this._path.animate({path: this.getPathString()}, 1000);
+				return;
+			}
+			//*ffalt
 
 			this._path = this._paper.path(this.getPathString())
 				.attr(this._attr)
@@ -265,19 +324,45 @@
 			var p = this._path;
 
 			var fadeIn = function () {
+				this._scale += 0.01;
 				p.animate({
-					'fill-opacity': 0.25
+					'fill-opacity': 0.25,
+					transform: 's' + this._scale
 				}, 1000, '<', fadeOut);
 			};
 
 			var fadeOut = function () {
 				p.animate({
-					'fill-opacity': 1
+					'fill-opacity': 1,
+					transform: 's' + this._scale
 				}, 1000, '<', fadeIn);
 			};
 
 			fadeOut();
 		},
+
+		getBounds: function () {
+			var bounds = new L.LatLngBounds();
+			var i = 0, len = this._latlngs.length;
+			while (i < len) {
+				bounds.extend(this._latlngs[i++]);
+			}
+			return bounds;
+		},
+
+		moveCenter: function (latlng) {
+			var center = this.getBounds().getCenter();
+			var offset = new L.LatLng(center.lat - latlng.lat, center.lng - latlng.lng);
+			for (var i = 0; i < this._latlngs.length; i++) {
+				for (var j = 0; j < this._latlngs[i].length; j++) {
+					for (var k = 0; k < this._latlngs[i][j].length; k++) {
+						var ll = this._latlngs[i][j][k];
+						this._latlngs[i][j][k] = new L.LatLng(ll.lat - offset.lat, ll.lng - offset.lng);
+					}
+				}
+			}
+		},
+		//*ffalt
 
 		getPathString: function () {
 			for (var i = 0, len = this._latlngs.length, str = ''; i < len; i++) {
@@ -544,6 +629,17 @@
 			this.latlng = latlng;
 			this.eachLayer(function (layer) {
 				layer.moveCenter(latlng);
+			}, this);
+		},
+
+		randomizeBorder: function(duration, cb){
+			this.eachLayer(function (layer) {
+				layer.randomizeBorder(duration,cb);
+			}, this);
+		},
+		resetRandomizeBorder: function(){
+			this.eachLayer(function (layer) {
+				layer.resetRandomizeBorder();
 			}, this);
 		},
 		//*ffalt

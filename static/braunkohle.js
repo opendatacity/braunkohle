@@ -2,14 +2,14 @@ var WELZOW_POINT = new L.LatLng(51.58474991408093, 14.226608276367188);
 var MINZOOM = 8;
 var MAXZOOM = 15;
 var DEFAULT_ZOOM = 11;
-var DURATION = 170;
+var DURATION = 170; //of 1% animation
 var INTRO = 'Klicken Sie auf die Karte um einen Startpunkt auszuwählen und auf den Start-Knopf unten links um die Animation zu starten.';
 var LEGALIES =
 	'powered by' + '<br/>' +
 		'<a href="http://leafletjs.com/" target="_blank">Leaflet</a>' + '<br/>' +
-		'<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> (<a href="http://opendatacommons.org/licenses/odbl/">ODbL</a>)' + '<br/>' +
-		'<a href=" http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/">CC-BY</a>)' + '<br/>' +
-		'' + '<br/>' +
+		'<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> (<a href="http://opendatacommons.org/licenses/odbl/" target="_blank">ODbL</a>)' + '<br/>' +
+		'<a href="http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY</a>)' + '<br/>' +
+		'<a href="http://opengeodb.org/wiki/OpenGeoDB" target="_blank">OpenGeoDB</a> ' + '<br/>' +
 		'' + '<br/>';
 
 $(document).ready(function () {
@@ -53,7 +53,6 @@ function searchCity(search) {
 		}
 	}
 	if (index >= 0) {
-		console.log('found:' + search + ' ' + index);
 		return new L.LatLng(geocode.lat[index], geocode.lng[index]);
 	}
 	return null;
@@ -146,7 +145,7 @@ function init() {
 
 function AudioPlayer() {
 	this.muted = false;
-	var audioelement = document.createElement('audio');// new Audio("");
+	var audioelement = document.createElement('audio');
 	document.body.appendChild(audioelement);
 	var canPlayType = audioelement.canPlayType("audio/ogg");
 	if (canPlayType.match(/maybe|probably/i)) {
@@ -265,6 +264,7 @@ Player.prototype = {
 
 	animate: function () {
 		if (this.actualprogress > this.maxprogress) {
+			this.r.resetRandomizeBorder();
 			this.playstate = PLAYSTATE.IDLE;
 			if (this.onEnd) {
 				this.onEnd();
@@ -280,10 +280,10 @@ Player.prototype = {
 //		}, 20 * 1000, "bounce", function () {
 //			console.log(this);
 //		});
-		var scale = 's' + this.actualprogress / this.maxprogress;
-		//console.log(scale);
+		var scale = this.actualprogress / this.maxprogress;
+		console.log(scale);
 		var caller = this;
-		var anim = Raphael.animation({transform: scale}, DURATION, '<', function () {
+		var anim = Raphael.animation({transform: 's' + scale}, DURATION, '<', function () {
 			caller.animate();
 		});
 		this.r.animate(anim);
@@ -300,14 +300,11 @@ Player.prototype = {
 		r.attr('opacity', 0);
 		r.attr('scale', 0);
 		r.moveCenter(latlng)
-		//var p = r.getBounds().getCenter();
 	},
 
 	addOSMLayer: function () {
-		L.tileLayer('http://tiles.odcdn.de/europe' + '/{z}/{x}/{y}.png', {attribution: ''
-//		L.tileLayer('http://api.tiles.mapbox.com/v3/ffalt.map-63b7bl05' + '/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://mapbox.com">Mapbox</a>'
-//		L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-		}).addTo(this.map);
+		L.tileLayer('http://tiles.odcdn.de/europe' + '/{z}/{x}/{y}.png', {attribution: ''}).addTo(this.map);
+//		L.tileLayer('http://api.tiles.mapbox.com/v3/ffalt.map-63b7bl05' + '/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://mapbox.com">Mapbox</a>'	}).addTo(this.map);
 	},
 
 	displayProgress: function () {
@@ -368,9 +365,7 @@ Player.prototype = {
 			});
 		}
 		if (index >= 0) {
-			console.log('found:' + search);
 			var p = new L.LatLng(geocode.lat[index], geocode.lng[index]);
-			console.log(p);
 			this.marker.setLatLng(p);
 			this.map.setView(p, this.map.getZoom());
 			return true;
