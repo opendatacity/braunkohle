@@ -11,6 +11,9 @@ var LEGALIES =
 		'<a href="http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY</a>)' + '<br/>' +
 		'<a href="http://opengeodb.org/wiki/OpenGeoDB" target="_blank">OpenGeoDB</a> ' + '<br/>' +
 		'' + '<br/>';
+var SOUND_OGG = '/static/sound.ogg';
+var SOUND_MP3 = '/static/sound.mp3';
+
 
 $(document).ready(function () {
 	init();
@@ -149,9 +152,9 @@ function AudioPlayer() {
 	document.body.appendChild(audioelement);
 	var canPlayType = audioelement.canPlayType("audio/ogg");
 	if (canPlayType.match(/maybe|probably/i)) {
-		audioelement.src = '/static/sound.ogg';
+		audioelement.src = SOUND_OGG;
 	} else {
-		audioelement.src = '/static/sound.mp3';
+		audioelement.src = SOUND_MP3;
 	}
 	var caller = this;
 	new MediaElement(audioelement, {success: function (media) {
@@ -281,7 +284,6 @@ Player.prototype = {
 //			console.log(this);
 //		});
 		var scale = this.actualprogress / this.maxprogress;
-		console.log(scale);
 		var caller = this;
 		var anim = Raphael.animation({transform: 's' + scale}, DURATION, '<', function () {
 			caller.animate();

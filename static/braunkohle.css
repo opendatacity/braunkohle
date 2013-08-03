@@ -114,15 +114,16 @@ body, .leaflet-container, input, button, select, textarea {
 			-o-transition-timing-function: ease-in-out;
 			transition-duration: 200ms;
 			transition-property: background;
-			border-color:transparent;
+			border:0;
+			font-family: FontAwesome !important;
 			background:#353535;
-			color:#eeeeee;
+			color:#eeeeee !important;
 			margin-top: 4px;
 		}
 
 		#foot button:hover {
 			background: #202020;
-			color: #ffffff;
+			color: #ffffff !important;
 		}
 
 		#foot button[disabled="disabled"] {

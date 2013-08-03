@@ -53,7 +53,6 @@
 		},
 
 		projectLatLngs: function () {
-
 		},
 
 		animate: function (attr, ms, easing, callback) {
@@ -220,7 +219,7 @@
 		projectLatLngs: function () {
 			//ffalt* reuse path
 			if (this._path) {
-				this._path.animate({path: this.getPathString()}, 300);
+				this._path.animate({path: this.getPathString()}, 80);
 				return;
 			}
 			//*ffalt
@@ -245,23 +244,15 @@
 			var center = this.getBounds().getCenter();
 			var offset = new L.LatLng(center.lat - latlng.lat, center.lng - latlng.lng);
 			for (var i = 0; i < this._latlngs.length; i++) {
-				for (var j = 0; j < this._latlngs[i].length; j++) {
-					for (var k = 0; k < this._latlngs[i][j].length; k++) {
-						var ll = this._latlngs[i][j][k];
-						this._latlngs[i][j][k] = new L.LatLng(ll.lat - offset.lat, ll.lng - offset.lng);
-					}
-				}
+				var ll = this._latlngs[i];
+				this._latlngs[i] = new L.LatLng(ll.lat - offset.lat, ll.lng - offset.lng);
 			}
-//			this.eachLayer(function (layer) {
-//				if (layer.projectLatLngs) {
-//					layer.projectLatLngs();
-//				}
-//			}, this);
+			this.projectLatLngs();
 		},
 
 		randomizeBorder: function (duration, cb) {
 			if (this._path) {
-				this._path.animate({path: this.getPathString(true)}, duration, function(){
+				this._path.animate({path: this.getPathString(true)}, duration, function () {
 					cb();
 				});
 			}
@@ -278,7 +269,7 @@
 				var rx = 0;
 				var ry = 0;
 				if (randomBorder) {
-					var rx = Math.floor(Math.random() * 10) ;
+					var rx = Math.floor(Math.random() * 10);
 					var ry = Math.floor(Math.random() * 10);
 				}
 				var p = this._map.latLngToLayerPoint(this._latlngs[i]);
@@ -632,12 +623,12 @@
 			}, this);
 		},
 
-		randomizeBorder: function(duration, cb){
+		randomizeBorder: function (duration, cb) {
 			this.eachLayer(function (layer) {
-				layer.randomizeBorder(duration,cb);
+				layer.randomizeBorder(duration, cb);
 			}, this);
 		},
-		resetRandomizeBorder: function(){
+		resetRandomizeBorder: function () {
 			this.eachLayer(function (layer) {
 				layer.resetRandomizeBorder();
 			}, this);
