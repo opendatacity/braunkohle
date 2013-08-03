@@ -11,9 +11,6 @@ var LEGALIES =
 		'<a href="http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY</a>)' + '<br/>' +
 		'<a href="http://opengeodb.org/wiki/OpenGeoDB" target="_blank">OpenGeoDB</a> ' + '<br/>' +
 		'' + '<br/>';
-var SOUND_OGG = '/static/sound.ogg';
-var SOUND_MP3 = '/static/sound.mp3';
-
 
 $(document).ready(function () {
 	init();
@@ -148,19 +145,22 @@ function init() {
 
 function AudioPlayer() {
 	this.muted = false;
-	var audioelement = document.createElement('audio');
-	document.body.appendChild(audioelement);
-	var canPlayType = audioelement.canPlayType("audio/ogg");
-	if (canPlayType.match(/maybe|probably/i)) {
-		audioelement.src = SOUND_OGG;
-	} else {
-		audioelement.src = SOUND_MP3;
-	}
+	var audioelement = document.getElementById('audio');
 	var caller = this;
-	new MediaElement(audioelement, {success: function (media) {
-		caller.audio = media;
-		caller.audio.volume = (caller.muted ? 0 : 1);
-	}});
+	new MediaElement(audioelement, {
+		// shows debug errors on screen
+		enablePluginDebug: false,
+		plugins: ['flash','silverlight'],
+		// name of flash file
+		flashName: 'flashmediaelement.swf',
+		// name of silverlight file
+		silverlightName: 'silverlightmediaelement.xap',
+		customError: '',
+		success: function (media) {
+			caller.audio = media;
+			caller.audio.volume = (caller.muted ? 0 : 1);
+			caller.audio.load();
+		}});
 }
 
 AudioPlayer.prototype = {
@@ -266,6 +266,8 @@ Player.prototype = {
 	},
 
 	animate: function () {
+		if (this.playstate != PLAYSTATE.PLAYING)
+		  return;
 		if (this.actualprogress > this.maxprogress) {
 			this.r.resetRandomizeBorder();
 			this.playstate = PLAYSTATE.IDLE;
