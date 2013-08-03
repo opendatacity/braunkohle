@@ -211,15 +211,26 @@
 					latlngs = latlngs[0];
 				}
 			}
-
+			this.scale = 0;
 			this._latlngs = latlngs;
 			this._attr = attr || {'fill': 'rgba(255, 0, 0, 0.5)', 'stroke': '#f00', 'stroke-width': 1};
+			//*ffalt
+			this._pulseAttr = {
+				'stroke-width': 12,
+//				'fill': '#30a3ec',
+				'stroke': '#7E642D'
+			};
+			//ffalt*
+
 		},
 
 		projectLatLngs: function () {
 			//ffalt* reuse path
 			if (this._path) {
 				this._path.animate({path: this.getPathString()}, 80);
+				if (this._pulse) {
+					this._pulse.animate({path: this.getPathString()}, 80);
+				}
 				return;
 			}
 			//*ffalt
@@ -227,10 +238,23 @@
 				.attr(this._attr)
 				.toBack();
 			this._set.push(this._path);
+
+			//*ffalt
+			this._pulse = this._paper.path(this.getPathString())
+				.attr(this._pulseAttr).attr('opacity', 0).attr('transform', 's0')
+				.toBack();
+			this.pulse();
+			//ffalt*
 		},
 
-
 		//ffalt* implement L.Layer.getBounds method
+		onRemove: function (map) {
+			R.Layer.prototype.onRemove.call(this, map);
+
+			if (this._pulse) this._pulse.remove();
+			if (this._path) this._path.remove();
+		},
+
 		getBounds: function () {
 			var bounds = new L.LatLngBounds();
 			var i = 0, len = this._latlngs.length;
@@ -248,6 +272,46 @@
 				this._latlngs[i] = new L.LatLng(ll.lat - offset.lat, ll.lng - offset.lng);
 			}
 			this.projectLatLngs();
+		},
+
+		setScale: function (scale, duration, cb) {
+			this.scale = scale;
+			//console.log('setScale: ' + scale);
+			var pathanim = Raphael.animation({transform: 's' + scale}, duration || 0, '<', function () {
+				if (cb)
+					cb();
+			});
+			this._path.animate(pathanim);
+			if (scale >= 1)
+				scale = 0;
+			if (scale == 0) {
+				if (this.pulsescaleanim)
+					this._pulse.stop(this.pulsescaleanim);
+				this._pulse.attr('transform', 's0');
+			} else {
+				this.pulsescaleanim = Raphael.animation({transform: 's' + scale
+				}, duration || 0, '<', function () {
+				});
+				this._pulse.animate(this.pulsescaleanim);
+			}
+		},
+
+		pulse: function () {
+			var p = this._pulse;
+
+			var fadeIn = function () {
+				p.animate({
+					'opacity': 0.45
+				}, 500, '<', fadeOut);
+			};
+
+			var fadeOut = function () {
+				p.animate({
+					'opacity': 0.2
+				}, 500, '<', fadeIn);
+			};
+
+			fadeOut();
 		},
 
 		randomizeBorder: function (duration, cb) {
@@ -269,8 +333,8 @@
 				var rx = 0;
 				var ry = 0;
 				if (randomBorder) {
-					var rx = Math.floor(Math.random() * 10);
-					var ry = Math.floor(Math.random() * 10);
+					var rx = Math.floor(Math.random() * 2);
+					var ry = Math.floor(Math.random() * 2);
 				}
 				var p = this._map.latLngToLayerPoint(this._latlngs[i]);
 				str += (i ? 'L' : 'M') + (p.x + rx) + ' ' + (p.y + ry);
@@ -631,6 +695,11 @@
 		resetRandomizeBorder: function () {
 			this.eachLayer(function (layer) {
 				layer.resetRandomizeBorder();
+			}, this);
+		},
+		setScale: function (scale, duration, cb) {
+			this.eachLayer(function (layer) {
+				layer.setScale(scale, duration, cb);
 			}, this);
 		},
 		//*ffalt

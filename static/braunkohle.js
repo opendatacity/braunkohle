@@ -2,7 +2,9 @@ var WELZOW_POINT = new L.LatLng(51.58474991408093, 14.226608276367188);
 var MINZOOM = 8;
 var MAXZOOM = 15;
 var DEFAULT_ZOOM = 11;
-var DURATION = 170; //of 1% animation
+var DURATION = 170; //of x% animation
+var DURATIONSTEP = 1; //x% animation
+
 var INTRO = 'Klicken Sie auf die Karte um einen Startpunkt auszuwählen und auf den Start-Knopf unten links um die Animation zu starten.';
 var LEGALIES =
 	'powered by' + '<br/>' +
@@ -150,7 +152,7 @@ function AudioPlayer() {
 	new MediaElement(audioelement, {
 		// shows debug errors on screen
 		enablePluginDebug: false,
-		plugins: ['flash','silverlight'],
+		plugins: ['flash', 'silverlight'],
 		// name of flash file
 		flashName: 'flashmediaelement.swf',
 		// name of silverlight file
@@ -267,7 +269,7 @@ Player.prototype = {
 
 	animate: function () {
 		if (this.playstate != PLAYSTATE.PLAYING)
-		  return;
+			return;
 		if (this.actualprogress > this.maxprogress) {
 			this.r.resetRandomizeBorder();
 			this.playstate = PLAYSTATE.IDLE;
@@ -279,20 +281,13 @@ Player.prototype = {
 			return;
 		}
 		this.displayProgress();
-//		this.anim = Raphael.animation({
-//			'0%': {transform: 's0.1', opacity: 0.8, easing: '<'},
-//			'100%': {transform: 's1.0', opacity: 1.0}
-//		}, 20 * 1000, "bounce", function () {
-//			console.log(this);
-//		});
 		var scale = this.actualprogress / this.maxprogress;
+		//console.log(scale);
 		var caller = this;
-		var anim = Raphael.animation({transform: 's' + scale}, DURATION, '<', function () {
+		this.r.setScale(scale, DURATION, function () {
 			caller.animate();
 		});
-		this.r.animate(anim);
-		this.actualprogress++;
-
+		this.actualprogress += DURATIONSTEP;
 	},
 
 	addRLayer: function (latlng, geojson) {
@@ -340,7 +335,7 @@ Player.prototype = {
 
 	reset: function () {
 		this.r.attr('opacity', 1);
-		this.r.attr('transform', "s0");
+		this.r.setScale(0, 1);
 		this.map.addLayer(this.marker);
 	},
 
