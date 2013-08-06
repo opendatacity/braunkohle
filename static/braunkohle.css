@@ -45,6 +45,14 @@ body, .leaflet-container, input, button, select, textarea {
 
 		}
 
+		@media screen and (max-width: 360px) {
+
+			input[type="text"] {
+				width: 100px !important;
+			}
+
+		}
+
 		.search-icon {
 			position:relative;
 			margin-left:-22px;
