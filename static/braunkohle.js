@@ -284,7 +284,7 @@ Player.prototype = {
 		var scale = this.actualprogress / this.maxprogress;
 		//console.log(scale);
 		var caller = this;
-		this.r.setScale(scale, DURATION, function () {
+		this.r.setTime(scale, function () {
 			caller.animate();
 		});
 		this.actualprogress += DURATIONSTEP;
@@ -296,8 +296,8 @@ Player.prototype = {
 		var r = this.r;
 		r.attr('fill', 'rgba(39, 19, 10, 0.8)');
 		r.attr({stroke: "gray", "stroke-width": 0.5});
-		r.attr('opacity', 0);
-		r.attr('scale', 0);
+		//r.attr('opacity', 0);
+		//r.attr('scale', 0);
 		r.moveCenter(latlng)
 	},
 
@@ -327,15 +327,14 @@ Player.prototype = {
 
 			this.r.moveCenter(this.marker.getLatLng());
 			this.r.attr('opacity', 1);
-			this.r.attr('transform', "s0");
+			//this.r.attr('transform', "s0");
 		}
 		this.playstate = PLAYSTATE.PLAYING;
 		this.animate();
 	},
 
 	reset: function () {
-		this.r.attr('opacity', 1);
-		this.r.setScale(0, 1);
+		this.r.setTime(0);
 		this.map.addLayer(this.marker);
 	},
 

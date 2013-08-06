@@ -151,24 +151,26 @@
 			R.Layer.prototype.onRemove.call(this, map);
 
 			if (this._marker) this._marker.remove();
-			if (this._pulse) this._pulse.remove();
+			//if (this._pulse) this._pulse.remove();
 		},
 
 		projectLatLngs: function () {
 			if (this._marker) this._marker.remove();
-			if (this._pulse) this._pulse.remove();
+			//if (this._pulse) this._pulse.remove();
 
 			var p = this._map.latLngToLayerPoint(this._latlng);
 
 			this._marker = this._paper.circle(p.x, p.y, this._radius).attr(this._attr);
-			this._pulse = this._paper.circle(p.x, p.y, this._radius).attr(this._pulseAttr);
+			//this._pulse = this._paper.circle(p.x, p.y, this._radius).attr(this._pulseAttr);
 
+			/*
 			var anim = Raphael.animation({
 				'0%': {transform: 's0.3', opacity: 1.0},
 				'100%': {transform: 's3.0', opacity: 0.0, easing: '<'}
 			}, 1000);
 
 			this._pulse.animate(anim.repeat(this._repeat));
+			*/
 		}
 	});
 
@@ -240,10 +242,12 @@
 			this._set.push(this._path);
 
 			//*ffalt
+			/*
 			this._pulse = this._paper.path(this.getPathString())
 				.attr(this._pulseAttr).attr('opacity', 0).attr('transform', 's0')
 				.toBack();
 			this.pulse();
+			*/
 			//ffalt*
 		},
 
@@ -251,7 +255,7 @@
 		onRemove: function (map) {
 			R.Layer.prototype.onRemove.call(this, map);
 
-			if (this._pulse) this._pulse.remove();
+			//if (this._pulse) this._pulse.remove();
 			if (this._path) this._path.remove();
 		},
 
@@ -284,6 +288,7 @@
 			this._path.animate(pathanim);
 			if (scale >= 1)
 				scale = 0;
+			/*
 			if (scale == 0) {
 				if (this.pulsescaleanim)
 					this._pulse.stop(this.pulsescaleanim);
@@ -294,8 +299,9 @@
 				});
 				this._pulse.animate(this.pulsescaleanim);
 			}
+			*/
 		},
-
+/*
 		pulse: function () {
 			var p = this._pulse;
 
@@ -313,7 +319,7 @@
 
 			fadeOut();
 		},
-
+*/
 		randomizeBorder: function (duration, cb) {
 			if (this._path) {
 				this._path.animate({path: this.getPathString(true)}, duration, function () {
@@ -729,6 +735,217 @@
 			});
 
 			this.addLayer(layer);
+			this.lastLayer = layer;
+		},
+
+		lastLayer: null,
+		originalPath: false,
+
+		setTime: function (time, callback) {
+			function init(path) {
+				console.log(path);
+				var newPath = [];
+
+				// Finde Mittelpunkt
+				var
+					xMin =  1e10,
+					xMax = -1e10,
+					yMin =  1e10,
+					yMax = -1e10;
+
+				for (var i = 0; i < path.length-1; i++) {
+					var point = path[i];
+					newPath.push([point[1], point[2]]);
+
+					if (xMin > point[1]) xMin = point[1];
+					if (xMax < point[1]) xMax = point[1];
+					if (yMin > point[2]) yMin = point[2];
+					if (yMax < point[2]) yMax = point[2];
+				}
+
+				var
+					xCenter = (xMin + xMax)/2,
+					yCenter = (yMin + yMax)/2,
+					areaFactor = 0.2*Math.sqrt((xMax - xMin)*(yMax - yMin));
+
+				var
+					n = newPath.length,
+					ids = [16, 17, 350, 500];
+
+				/*
+				xCenter = 0;
+				yCenter = 0;
+				for (var i = 0; i < ids.length; i++) {
+					xCenter += newPath[ids[i]][0];
+					yCenter += newPath[ids[i]][1];
+				}
+				xCenter /= ids.length;
+				yCenter /= ids.length;
+				*/
+
+				var times = [];
+
+				for (var i = 0; i < ids.length; i++) {
+					times[ids[i]] = [0, areaFactor*dist(ids[i]), undefined];	
+				}
+
+				for (var i = 0; i < ids.length-1; i++) {
+					calcTimes(ids[i], ids[i+1]);
+				}
+
+				calcTimes(ids[ids.length-1], ids[0]+n);
+
+				function dist(i, j) {
+					i = i % n;
+					var dx, dy;
+					if (j !== undefined) {
+						j = j % n;
+						dx = newPath[i][0] - newPath[j][0];
+						dy = newPath[i][1] - newPath[j][1];
+					} else {
+						dx = newPath[i][0] - xCenter;
+						dy = newPath[i][1] - yCenter;
+					}
+					return Math.sqrt(dx*dx + dy*dy);
+				}
+
+				function calcTimes(i0, i1) {
+					if (i1 - i0 <= 1) return;
+
+					var
+						p0 = newPath[i0 % n],
+						p1 = newPath[i1 % n],
+						maxD = -1,
+						maxI = i0+1,
+						maxJ = i0+1;
+
+					for (var i = i0+1; i < i1; i++) {
+						var j = i % n;
+						var p = newPath[j];
+						var d = Math.abs((p[0]-p0[0])*(p[1]-p1[1]) - (p[1]-p0[1])*(p[0]-p1[0]));
+						if (maxD < d) {
+							maxD = d;
+							maxI = i;
+							maxJ = j;
+						}
+					}
+
+					var bestI = (times[i0 % n][1] > times[i1 % n][1]) ? i0 : i1;
+					var t0 = times[bestI % n][1];
+
+					times[maxJ] = [
+						t0,
+						t0 + maxD,
+						i0 % n,
+						i1 % n
+					];
+
+					/*
+					times[maxJ] = [
+						times[bestI % n][1],
+						times[bestI % n][1] + dist(bestI, maxJ),
+						bestI % n
+					];
+					*/
+
+					calcTimes(i0, maxI);
+					calcTimes(maxI, i1);
+				}
+
+				var maxTimes = 0;
+				for (var i = 0; i < n; i++) if (maxTimes < times[i][1]) maxTimes = times[i][1];
+				for (var i = 0; i < n; i++) {
+					times[i][0] /= maxTimes;
+					times[i][1] /= maxTimes; 
+				}
+
+				var order = [];
+				for (var i = 0; i < n; i++) order[i] = i;
+				order.sort(function (a,b) {
+					return times[a][0] - times[b][0];
+				});
+
+				//console.log(order);
+
+				return {
+					path: newPath,
+					times: times,
+					order: order,
+					center: [xCenter, yCenter]
+				}
+			}
+
+
+			if (!this.originalPath) {
+				this.originalPath = init(this.lastLayer._path.attr('path'));
+				//console.log(this.originalPath);
+			}
+
+			var
+				path = [],
+				path0 = this.originalPath.path,
+				times = this.originalPath.times,
+				order = this.originalPath.order,
+				center = this.originalPath.center;
+
+			for (var j = 0; j < order.length; j++) {
+				var i = order[j];
+				if (times[i][0] < time) {
+					if (times[i][1] > time) {
+						// interpoliere
+						var a = (time - times[i][0])/(times[i][1] - times[i][0]);
+						var p;
+						if (times[i][2] === undefined) {
+							// interpoliere vom Zentrum
+							p = center;
+						} else {
+							// interpoliere vom referenzpunkt
+							p = [
+								(path0[times[i][2]][0] + path0[times[i][3]][0])/2,
+								(path0[times[i][2]][1] + path0[times[i][3]][1])/2
+							];
+						}
+						path[i] = [
+							p[0] + (path0[i][0] - p[0])*a,
+							p[1] + (path0[i][1] - p[1])*a
+						];
+					} else {
+						// endwert
+						path[i] = [path0[i][0], path0[i][1]];
+					}
+				}
+			}
+
+			var result = [];
+			for (var i = 0; i < path.length; i++) {
+				if (path[i]) result.push(['L', path[i][0], path[i][1]]);
+			}
+
+			if (result.length < 2) {
+				result = [
+					['M', center[0], center[1]],
+					['Z']
+				]
+			} else {
+				result[0][0] = 'M';
+				result.push(['Z']);
+			}
+			
+			console.log(result);
+
+
+			//this.originalPath = path;
+			/*
+			var p = this.lastLayer._path.attr('path');
+			//if (time == 0) console.log(p);
+			for (var i = 0; i < p.length-1; i++) {
+				p[i][1] += (Math.random() - 0.5)*2;
+				p[i][2] += (Math.random() - 0.5)*2;
+			}
+			*/
+			this.lastLayer._path.attr('path', result)
+			//console.log(time);
+			setTimeout(callback, 40);
 		}
 	});
 
