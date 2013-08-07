@@ -2,9 +2,8 @@ var WELZOW_POINT = new L.LatLng(51.58474991408093, 14.226608276367188);
 var MINZOOM = 8;
 var MAXZOOM = 15;
 var DEFAULT_ZOOM = 11;
-var DURATION = 170; //of x% animation
-var DURATIONSTEP = 1; //x% animation
-var AREASIZE = 108; //qm of size
+var DURATIONSTEP = 0.25; //x% animation
+var AREASIZE = 865; //area size in ha
 
 var INTRO = 'Das große Baggern<br/>Vattenfall will in der Lausitz noch mehr Braunkohle abbaggern und so Tausende von Menschen aus ihren Häusern vertreiben. Aktuell geht es um die Erweiterung des Tagebaus Welzow Süd. Wie groß das geplante Loch wäre, ist schwer vorstellbar. Diese Animation hilft euch dabei: Einfach einen Städtenamen eingeben und das große Graben beginnt.';
 var LEGALIES =
@@ -137,6 +136,14 @@ function init() {
 			);
 		}
 	});
+	if (screenfull.enabled) {
+		$('#fullscreen').click(function (event) {
+			screenfull.toggle();
+			player.autofit();
+		});
+	} else {
+		$('#fullscreen').hide();
+	}
 	$('#search').typeahead({
 		source: geocode.name,
 		updater: function (item) {
@@ -161,7 +168,7 @@ function AudioPlayer() {
 		customError: '',
 		success: function (media) {
 			caller.audio = media;
-			caller.audio.volume = (caller.muted ? 0 : 1);
+			caller.applyMuted();
 			caller.audio.load();
 		}});
 }
@@ -178,13 +185,17 @@ AudioPlayer.prototype = {
 		}
 	},
 	pause: function () {
-		if (this.audio)
+		if (this.audio) {
 			this.audio.pause();
+		}
+	},
+	applyMuted: function () {
+		if (this.audio)
+			this.audio.volume = (this.muted ? 0 : 1);
 	},
 	setMute: function (muted) {
 		this.muted = muted;
-		if (this.audio)
-			this.audio.volume = (this.muted ? 0 : 1);
+		this.applyMuted();
 	}
 };
 
@@ -202,18 +213,17 @@ function Player(latlng, geometry, zoom) {
 	this.addOSMLayer();
 	this.displayProgress();
 	this.addRLayer(latlng, geometry);
-	this.showTextOverlay(INTRO)
-
+	this.showTextOverlay(INTRO);
 
 	var baggerIcon = L.icon({
 		iconUrl: '/static/bagger.png',
-//		shadowUrl: '/static/bagger.gif',
+//		shadowUrl: '/static/bagger.png',
 
-		iconSize:     [60, 60], // size of the icon
-		shadowSize:   [60, 60], // size of the shadow
-		iconAnchor:   [30, 30], // point of the icon which will correspond to marker's location
+		iconSize: [60, 60], // size of the icon
+		shadowSize: [60, 60], // size of the shadow
+		iconAnchor: [30, 30], // point of the icon which will correspond to marker's location
 		shadowAnchor: [30, 30],  // the same for the shadow
-		popupAnchor:  [0, 0] // point from which the popup should open relative to the iconAnchor
+		popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
 	});
 
 	this.marker = L.marker(latlng, {icon: baggerIcon}).addTo(this.map);
@@ -318,8 +328,8 @@ Player.prototype = {
 	},
 
 	displayProgress: function () {
-		this.indicator.style.width = this.actualprogress/ + "%";
-		this.progress_text.innerHTML = (AREASIZE *  (this.actualprogress/100)).toFixed(2) + " m²";
+		this.indicator.style.width = this.actualprogress / +"%";
+		this.progress_text.innerHTML = (AREASIZE * (this.actualprogress / 100)).toFixed(2) + " Hektar";
 	},
 
 	start: function () {
@@ -330,12 +340,6 @@ Player.prototype = {
 			this.map.removeLayer(this.marker);
 			this.actualprogress = 0;
 			this.map.setView(this.marker.getLatLng(), this.map.getZoom());
-
-//			var southWest = new L.LatLng(route.south, route.west),
-//				northEast = new L.LatLng(route.north, route.east);
-//			geotrace.bounds = new L.LatLngBounds(southWest, northEast);
-//			map.fitBounds(this.geotrace.bounds);
-
 			this.r.moveCenter(this.marker.getLatLng());
 			this.r.attr('opacity', 1);
 			//this.r.attr('transform', "s0");
@@ -359,6 +363,10 @@ Player.prototype = {
 		this.displayProgress();
 	},
 
+	autofit: function () {
+		this.map.fitBounds(this.r.getBounds());
+	},
+
 	jumpTo: function (search) {
 		if ((!search) || (!search.length))
 			return false;
@@ -375,9 +383,10 @@ Player.prototype = {
 			var p = new L.LatLng(geocode.lat[index], geocode.lng[index]);
 			this.marker.setLatLng(p);
 			this.map.setView(p, this.map.getZoom());
+			this.autofit();
 			return true;
 		} else {
-			console.log('kenn ich leider nich ' + search); //FIX ME
+			//	console.log('kenn ich leider nich ' + search); //FIX ME
 		}
 		return false;
 	}
