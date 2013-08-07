@@ -261,6 +261,7 @@ Player.prototype = {
 
 		this.marker = L.marker(latlng, {
 			icon: baggerIcon,
+			opacity:0.5,
 			title: 'Klicken um zu Starten'
 		}).addTo(this.map);
 		var caller = this;
