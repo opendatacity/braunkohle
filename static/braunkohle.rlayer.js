@@ -258,7 +258,6 @@
 				}
 			}
 			this.scale = 0;
-			this.lastTime = 0;
 			this._latlngs = latlngs;
 			this._attr = attr || {'fill': 'rgba(255, 0, 0, 0.5)', 'stroke': '#f00', 'stroke-width': 1};
 		},

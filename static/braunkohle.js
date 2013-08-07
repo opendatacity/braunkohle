@@ -2,7 +2,7 @@ var WELZOW_POINT = new L.LatLng(51.58474991408093, 14.226608276367188);
 var MINZOOM = 8;
 var MAXZOOM = 15;
 var DEFAULT_ZOOM = 11;
-var DURATIONSTEP = 0.25; //x% animation
+var DURATIONSTEP = 0.4; //x% animation
 var AREASIZE = 865; //area size in ha
 
 var INTRO = 'Das große Baggern<br/>Vattenfall will in der Lausitz noch mehr Braunkohle abbaggern und so Tausende von Menschen aus ihren Häusern vertreiben. Aktuell geht es um die Erweiterung des Tagebaus Welzow Süd. Wie groß das geplante Loch wäre, ist schwer vorstellbar. Diese Animation hilft euch dabei: Einfach einen Städtenamen eingeben und das große Graben beginnt.';
@@ -94,12 +94,14 @@ function init() {
 		btn_play.show();
 		btn_pause.hide();
 	};
-	btn_play.click(function (event) {
+	player.onStart = function () {
 		audio.play();
-		player.start();
 		btn_play.hide();
 		btn_pause.show();
 		btn_stop.removeAttr('disabled');
+	};
+	btn_play.click(function (event) {
+		player.start();
 	});
 	btn_stop.click(function (event) {
 		audio.stop();
@@ -214,24 +216,13 @@ function Player(latlng, geometry, zoom) {
 	this.displayProgress();
 	this.addRLayer(latlng, geometry);
 	this.showTextOverlay(INTRO);
-
-	var baggerIcon = L.icon({
-		iconUrl: '/static/bagger.png',
-//		shadowUrl: '/static/bagger.png',
-
-		iconSize: [60, 60], // size of the icon
-		shadowSize: [60, 60], // size of the shadow
-		iconAnchor: [30, 30], // point of the icon which will correspond to marker's location
-		shadowAnchor: [30, 30],  // the same for the shadow
-		popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
-	});
-
-	this.marker = L.marker(latlng, {icon: baggerIcon}).addTo(this.map);
-
+	this.addMarker(latlng);
 	this.addMouseClick();
 }
 
 Player.prototype = {
+
+	zoomdisabled: false,
 
 	initMap: function (latlng, zoom) {
 		this.map = L.map('map', {
@@ -245,22 +236,37 @@ Player.prototype = {
 		}).setView(latlng, zoom);
 		var caller = this;
 		this.map.on('zoomstart', function (event) {
-			caller.r.attr('opacity', 0);
-			if (caller.playstate != PLAYSTATE.IDLE) {
-				caller.r.stop();
-				caller.r.attr('transform', "s1");
+			if (caller.playstate == PLAYSTATE.PLAYING) {
+				caller.zoomdisabled = true;
 			}
 		});
 		this.map.on('zoomend', function (event) {
-			if (caller.playstate != PLAYSTATE.IDLE) {
-				caller.r.attr('transform', 's' + caller.actualprogress / caller.maxprogress);
-				if (caller.playstate == PLAYSTATE.PLAYING)
-					caller.animate();
-				caller.r.attr('opacity', 1);
-			} else if (caller.actualprogress > 0) {
-				caller.r.attr('opacity', 1);
+			if (caller.zoomdisabled) {
+				caller.zoomdisabled = false;
+				caller.animate();
 			}
-		})
+		});
+	},
+
+	addMarker: function (latlng) {
+		var baggerIcon = L.icon({
+			iconUrl: '/static/bagger.png',
+//		shadowUrl: '/static/bagger.png',
+			iconSize: [60, 60], // size of the icon
+			shadowSize: [60, 60], // size of the shadow
+			iconAnchor: [30, 30], // point of the icon which will correspond to marker's location
+			shadowAnchor: [30, 30],  // the same for the shadow
+			popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
+		});
+
+		this.marker = L.marker(latlng, {
+			icon: baggerIcon,
+			title: 'Klicken um zu Starten'
+		}).addTo(this.map);
+		var caller = this;
+		this.marker.on('click',function (e) {
+			caller.start();
+		});
 	},
 
 	hideTextOverlay: function () {
@@ -294,7 +300,7 @@ Player.prototype = {
 	},
 
 	animate: function () {
-		if (this.playstate != PLAYSTATE.PLAYING)
+		if (this.zoomdisabled || (this.playstate != PLAYSTATE.PLAYING))
 			return;
 		if (this.actualprogress > this.maxprogress) {
 			this.playstate = PLAYSTATE.IDLE;
@@ -342,7 +348,8 @@ Player.prototype = {
 			this.map.setView(this.marker.getLatLng(), this.map.getZoom());
 			this.r.moveCenter(this.marker.getLatLng());
 			this.r.attr('opacity', 1);
-			//this.r.attr('transform', "s0");
+			if (this.onStart)
+				this.onStart();
 		}
 		this.playstate = PLAYSTATE.PLAYING;
 		this.animate();
@@ -350,7 +357,7 @@ Player.prototype = {
 
 	reset: function () {
 		this.r.setTime(0);
-		this.map.addLayer(this.marker);
+		this.marker.addTo(this.map);
 	},
 
 	pause: function () {
@@ -364,12 +371,14 @@ Player.prototype = {
 	},
 
 	autofit: function () {
-		this.map.fitBounds(this.r.getBounds());
+		//	this.r.moveCenter(this.marker.getLatLng());
+		//	this.map.fitBounds(this.r.getBounds());
 	},
 
 	jumpTo: function (search) {
 		if ((!search) || (!search.length))
 			return false;
+		console.log(search);
 		//full test
 		var index = geocode.name.indexOf(search);
 		if (index < 0) {
@@ -386,7 +395,7 @@ Player.prototype = {
 			this.autofit();
 			return true;
 		} else {
-			//	console.log('kenn ich leider nich ' + search); //FIX ME
+			console.log('kenn ich leider nich ' + search); //FIX ME
 		}
 		return false;
 	}
