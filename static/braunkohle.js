@@ -308,10 +308,8 @@ Player.prototype = {
 	addRLayer: function (latlng, geojson) {
 		this.r = new R.GeoJSON(geojson);
 		this.map.addLayer(this.r);
-		var r = this.r;
-		//r.attr('opacity', 0);
-		//r.attr('scale', 0);
-		r.moveCenter(latlng)
+		this.r.attr('opacity', 0);
+		this.r.moveCenter(latlng)
 	},
 
 	addOSMLayer: function () {
@@ -353,14 +351,12 @@ Player.prototype = {
 
 	pause: function () {
 		this.playstate = PLAYSTATE.PAUSED;
-		//this.r.stop();
 	},
 
 	stop: function () {
 		this.playstate = PLAYSTATE.IDLE;
 		this.actualprogress = 0;
 		this.displayProgress();
-		//this.r.stop();
 	},
 
 	jumpTo: function (search) {

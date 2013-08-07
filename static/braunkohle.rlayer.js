@@ -140,7 +140,7 @@
 		}
 	});
 
-	R.Polygon = R.Layer.extend({
+	R.PolygonPulse = R.Layer.extend({
 
 		initialize: function (latlngs, attr, options) {
 			R.Layer.prototype.initialize.call(this, options);
@@ -152,44 +152,23 @@
 			}
 			this.scale = 0;
 			this._latlngs = latlngs;
-			this._attr = attr || {'fill': 'rgba(255, 0, 0, 0.5)', 'stroke': '#f00', 'stroke-width': 1};
-			//*ffalt
-			this._pulseAttr = {
+			this._attr = {
 				'stroke-width': 12,
-//				'fill': '#30a3ec',
 				'stroke': '#7E642D'
 			};
-			//ffalt*
-
 		},
 
 		projectLatLngs: function () {
-			this.originalPath=null;
-
 			if (this._path) {
 				this._path.remove();
-//				this._path.animate({path: this.getPathString()}, 0);
-//				if (this._pulse) {
-//					this._pulse.animate({path: this.getPathString()}, 0);
-//				}
-//				return;
 			}
 			this._path = this._paper.path(this.getPathString())
 				.attr(this._attr)
 				.toBack();
 			this._set.push(this._path);
-
-			//*ffalt
-			/*
-			this._pulse = this._paper.path(this.getPathString())
-				.attr(this._pulseAttr).attr('opacity', 0).attr('transform', 's0')
-				.toBack();
 			this.pulse();
-			*/
-			//ffalt*
 		},
 
-		//ffalt* implement L.Layer.getBounds method
 		onRemove: function (map) {
 			R.Layer.prototype.onRemove.call(this, map);
 
@@ -227,37 +206,110 @@
 //			if (scale >= 1)
 //				scale = 0;
 			/*
-			if (scale == 0) {
-				if (this.pulsescaleanim)
-					this._pulse.stop(this.pulsescaleanim);
-				this._pulse.attr('transform', 's0');
-			} else {
-				this.pulsescaleanim = Raphael.animation({transform: 's' + scale
-				}, duration || 0, '<', function () {
-				});
-				this._pulse.animate(this.pulsescaleanim);
-			}
-			*/
+			 if (scale == 0) {
+			 if (this.pulsescaleanim)
+			 this._pulse.stop(this.pulsescaleanim);
+			 this._pulse.attr('transform', 's0');
+			 } else {
+			 this.pulsescaleanim = Raphael.animation({transform: 's' + scale
+			 }, duration || 0, '<', function () {
+			 });
+			 this._pulse.animate(this.pulsescaleanim);
+			 }
+			 */
 		},
-/*
-		pulse: function () {
-			var p = this._pulse;
 
+		pulse: function () {
 			var fadeIn = function () {
-				p.animate({
+				this._path.animate({
 					'opacity': 0.45
 				}, 500, '<', fadeOut);
 			};
-
 			var fadeOut = function () {
-				p.animate({
+				this._path.animate({
 					'opacity': 0.2
 				}, 500, '<', fadeIn);
 			};
-
 			fadeOut();
 		},
-*/
+
+		setTime: function (time) {
+			//nop
+		},
+
+		getPathString: function () {
+			for (var i = 0, len = this._latlngs.length, str = ''; i < len; i++) {
+				var p = this._map.latLngToLayerPoint(this._latlngs[i]);
+				str += (i ? 'L' : 'M') + (p.x) + ' ' + (p.y);
+			}
+			str += 'Z';
+
+			return str;
+		}
+	});
+
+	R.Polygon = R.Layer.extend({
+
+		initialize: function (latlngs, attr, options) {
+			R.Layer.prototype.initialize.call(this, options);
+			if (latlngs.length == 1) {
+				if (latlngs[0] instanceof Array) {
+					latlngs = latlngs[0];
+				}
+			}
+			this.scale = 0;
+			this.lastTime = 0;
+			this._latlngs = latlngs;
+			this._attr = attr || {'fill': 'rgba(255, 0, 0, 0.5)', 'stroke': '#f00', 'stroke-width': 1};
+		},
+
+		projectLatLngs: function () {
+			this.originalPath = null;
+			var opacity = 1;
+			if (this._path) {
+				opacity = this._path.attr('opacity');
+				this._path.remove();
+			}
+			this._path = this._paper.path(this.getPathString())
+				.attr(this._attr)
+				.toBack();
+			this._path.attr('opacity', opacity);
+			this._set.push(this._path);
+		},
+
+		onRemove: function (map) {
+			R.Layer.prototype.onRemove.call(this, map);
+			if (this._path) this._path.remove();
+			this.originalPath = null;
+		},
+
+		getBounds: function () {
+			var bounds = new L.LatLngBounds();
+			var i = 0, len = this._latlngs.length;
+			while (i < len) {
+				bounds.extend(this._latlngs[i++]);
+			}
+			return bounds;
+		},
+
+		moveCenter: function (latlng) {
+			var center = this.getBounds().getCenter();
+			var offset = new L.LatLng(center.lat - latlng.lat, center.lng - latlng.lng);
+			for (var i = 0; i < this._latlngs.length; i++) {
+				var ll = this._latlngs[i];
+				this._latlngs[i] = new L.LatLng(ll.lat - offset.lat, ll.lng - offset.lng);
+			}
+			this.projectLatLngs();
+		},
+
+		setScale: function (scale, duration, cb) {
+			this.scale = scale;
+			var pathanim = Raphael.animation({transform: 's' + scale}, duration || 0, '<', function () {
+				if (cb)
+					cb();
+			});
+			this._path.animate(pathanim);
+		},
 
 		originalPath: false,
 
@@ -268,12 +320,12 @@
 
 				// Finde Mittelpunkt
 				var
-					xMin =  1e10,
+					xMin = 1e10,
 					xMax = -1e10,
-					yMin =  1e10,
+					yMin = 1e10,
 					yMax = -1e10;
 
-				for (var i = 0; i < path.length-1; i++) {
+				for (var i = 0; i < path.length - 1; i++) {
 					var point = path[i];
 					newPath.push([point[1], point[2]]);
 
@@ -284,9 +336,9 @@
 				}
 
 				var
-					xCenter = (xMin + xMax)/2,
-					yCenter = (yMin + yMax)/2,
-					areaFactor = 0.2*Math.sqrt((xMax - xMin)*(yMax - yMin));
+					xCenter = (xMin + xMax) / 2,
+					yCenter = (yMin + yMax) / 2,
+					areaFactor = 0.2 * Math.sqrt((xMax - xMin) * (yMax - yMin));
 
 				var
 					n = newPath.length,
@@ -306,14 +358,14 @@
 				var times = [];
 
 				for (var i = 0; i < ids.length; i++) {
-					times[ids[i]] = [0, areaFactor*dist(ids[i]), undefined];
+					times[ids[i]] = [0, areaFactor * dist(ids[i]), undefined];
 				}
 
-				for (var i = 0; i < ids.length-1; i++) {
-					calcTimes(ids[i], ids[i+1]);
+				for (var i = 0; i < ids.length - 1; i++) {
+					calcTimes(ids[i], ids[i + 1]);
 				}
 
-				calcTimes(ids[ids.length-1], ids[0]+n);
+				calcTimes(ids[ids.length - 1], ids[0] + n);
 
 				function dist(i, j) {
 					i = i % n;
@@ -326,7 +378,7 @@
 						dx = newPath[i][0] - xCenter;
 						dy = newPath[i][1] - yCenter;
 					}
-					return Math.sqrt(dx*dx + dy*dy);
+					return Math.sqrt(dx * dx + dy * dy);
 				}
 
 				function calcTimes(i0, i1) {
@@ -336,13 +388,13 @@
 						p0 = newPath[i0 % n],
 						p1 = newPath[i1 % n],
 						maxD = -1,
-						maxI = i0+1,
-						maxJ = i0+1;
+						maxI = i0 + 1,
+						maxJ = i0 + 1;
 
-					for (var i = i0+1; i < i1; i++) {
+					for (var i = i0 + 1; i < i1; i++) {
 						var j = i % n;
 						var p = newPath[j];
-						var d = Math.abs((p[0]-p0[0])*(p[1]-p1[1]) - (p[1]-p0[1])*(p[0]-p1[0]));
+						var d = Math.abs((p[0] - p0[0]) * (p[1] - p1[1]) - (p[1] - p0[1]) * (p[0] - p1[0]));
 						if (maxD < d) {
 							maxD = d;
 							maxI = i;
@@ -381,7 +433,7 @@
 
 				var order = [];
 				for (var i = 0; i < n; i++) order[i] = i;
-				order.sort(function (a,b) {
+				order.sort(function (a, b) {
 					return times[a][0] - times[b][0];
 				});
 
@@ -413,7 +465,7 @@
 				if (times[i][0] < time) {
 					if (times[i][1] > time) {
 						// interpoliere
-						var a = (time - times[i][0])/(times[i][1] - times[i][0]);
+						var a = (time - times[i][0]) / (times[i][1] - times[i][0]);
 						var p;
 						if (times[i][2] === undefined) {
 							// interpoliere vom Zentrum
@@ -421,13 +473,13 @@
 						} else {
 							// interpoliere vom referenzpunkt
 							p = [
-								(path0[times[i][2]][0] + path0[times[i][3]][0])/2,
-								(path0[times[i][2]][1] + path0[times[i][3]][1])/2
+								(path0[times[i][2]][0] + path0[times[i][3]][0]) / 2,
+								(path0[times[i][2]][1] + path0[times[i][3]][1]) / 2
 							];
 						}
 						path[i] = [
-							p[0] + (path0[i][0] - p[0])*a,
-							p[1] + (path0[i][1] - p[1])*a
+							p[0] + (path0[i][0] - p[0]) * a,
+							p[1] + (path0[i][1] - p[1]) * a
 						];
 					} else {
 						// endwert
@@ -466,21 +518,12 @@
 			this._path.attr('path', result)
 		},
 
-		//*ffalt
-
-		getPathString: function (randomBorder) {
+		getPathString: function () {
 			for (var i = 0, len = this._latlngs.length, str = ''; i < len; i++) {
-				var rx = 0;
-				var ry = 0;
-				if (randomBorder) {
-					var rx = Math.floor(Math.random() * 2);
-					var ry = Math.floor(Math.random() * 2);
-				}
 				var p = this._map.latLngToLayerPoint(this._latlngs[i]);
-				str += (i ? 'L' : 'M') + (p.x + rx) + ' ' + (p.y + ry);
+				str += (i ? 'L' : 'M') + (p.x) + ' ' + (p.y);
 			}
 			str += 'Z';
-
 			return str;
 		}
 	});
