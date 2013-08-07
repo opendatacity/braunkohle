@@ -2,8 +2,8 @@ var WELZOW_POINT = new L.LatLng(51.58474991408093, 14.226608276367188);
 var MINZOOM = 8;
 var MAXZOOM = 15;
 var DEFAULT_ZOOM = 11;
-var DURATIONSTEP = 0.4; //x% animation
-var AREASIZE = 865; //area size in ha
+var DURATIONSTEP = 0.38; //x% animation
+var AREASIZE = 10800; //area size in ha
 
 var INTRO = 'Das große Baggern<br/>Vattenfall will in der Lausitz noch mehr Braunkohle abbaggern und so Tausende von Menschen aus ihren Häusern vertreiben. Aktuell geht es um die Erweiterung des Tagebaus Welzow Süd. Wie groß das geplante Loch wäre, ist schwer vorstellbar. Diese Animation hilft euch dabei: Einfach einen Städtenamen eingeben und das große Graben beginnt.';
 var LEGALIES =
@@ -261,11 +261,11 @@ Player.prototype = {
 
 		this.marker = L.marker(latlng, {
 			icon: baggerIcon,
-			opacity:0.5,
+			opacity: 0.5,
 			title: 'Klicken um zu Starten'
 		}).addTo(this.map);
 		var caller = this;
-		this.marker.on('click',function (e) {
+		this.marker.on('click', function (e) {
 			caller.start();
 		});
 	},
@@ -304,19 +304,19 @@ Player.prototype = {
 		if (this.zoomdisabled || (this.playstate != PLAYSTATE.PLAYING))
 			return;
 		if (this.actualprogress > this.maxprogress) {
+			this.actualprogress = this.maxprogress;
 			this.playstate = PLAYSTATE.IDLE;
 			if (this.onEnd) {
 				this.onEnd();
 			}
+			this.displayProgress();
 			this.map.addLayer(this.marker);
-			//console.log('anim end');
 			return;
 		}
 		this.displayProgress();
-		var scale = this.actualprogress / this.maxprogress;
-		//console.log(scale);
+		var time = this.actualprogress / this.maxprogress;
 		var caller = this;
-		this.r.setTime(scale, function () {
+		this.r.setTime(time, function () {
 			caller.animate();
 		});
 		this.actualprogress += DURATIONSTEP;
@@ -335,8 +335,11 @@ Player.prototype = {
 	},
 
 	displayProgress: function () {
-		this.indicator.style.width = this.actualprogress / +"%";
-		this.progress_text.innerHTML = (AREASIZE * (this.actualprogress / 100)).toFixed(2) + " Hektar";
+		this.indicator.style.width = this.actualprogress.toFixed(0) + "%";
+		var size = AREASIZE * (this.actualprogress / 100);
+		this.progress_text.innerHTML =
+			(size / 100).toFixed(2) + " km² - " +
+				(size).toFixed(2) + " Hektar";
 	},
 
 	start: function () {
@@ -379,7 +382,6 @@ Player.prototype = {
 	jumpTo: function (search) {
 		if ((!search) || (!search.length))
 			return false;
-		console.log(search);
 		//full test
 		var index = geocode.name.indexOf(search);
 		if (index < 0) {
@@ -396,7 +398,7 @@ Player.prototype = {
 			this.autofit();
 			return true;
 		} else {
-			console.log('kenn ich leider nich ' + search); //FIX ME
+//			console.log('kenn ich leider nich ' + search); //FIX ME
 		}
 		return false;
 	}
