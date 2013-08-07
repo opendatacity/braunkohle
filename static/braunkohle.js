@@ -4,8 +4,9 @@ var MAXZOOM = 15;
 var DEFAULT_ZOOM = 11;
 var DURATION = 170; //of x% animation
 var DURATIONSTEP = 1; //x% animation
+var AREASIZE = 108; //qm of size
 
-var INTRO = 'Klicken Sie auf die Karte um einen Startpunkt auszuwählen und auf den Start-Knopf unten links um die Animation zu starten.';
+var INTRO = 'Das große Baggern<br/>Vattenfall will in der Lausitz noch mehr Braunkohle abbaggern und so Tausende von Menschen aus ihren Häusern vertreiben. Aktuell geht es um die Erweiterung des Tagebaus Welzow Süd. Wie groß das geplante Loch wäre, ist schwer vorstellbar. Diese Animation hilft euch dabei: Einfach einen Städtenamen eingeben und das große Graben beginnt.';
 var LEGALIES =
 	'powered by' + '<br/>' +
 		'<a href="http://leafletjs.com/" target="_blank">Leaflet</a>' + '<br/>' +
@@ -199,9 +200,24 @@ function Player(latlng, geometry, zoom) {
 	this.playstate = PLAYSTATE.IDLE;
 	this.initMap(latlng, zoom);
 	this.addOSMLayer();
+	this.displayProgress();
 	this.addRLayer(latlng, geometry);
 	this.showTextOverlay(INTRO)
-	this.marker = L.marker(latlng).addTo(this.map);
+
+
+	var baggerIcon = L.icon({
+		iconUrl: '/static/bagger.png',
+//		shadowUrl: '/static/bagger.gif',
+
+		iconSize:     [60, 60], // size of the icon
+		shadowSize:   [60, 60], // size of the shadow
+		iconAnchor:   [30, 30], // point of the icon which will correspond to marker's location
+		shadowAnchor: [30, 30],  // the same for the shadow
+		popupAnchor:  [0, 0] // point from which the popup should open relative to the iconAnchor
+	});
+
+	this.marker = L.marker(latlng, {icon: baggerIcon}).addTo(this.map);
+
 	this.addMouseClick();
 }
 
@@ -271,7 +287,6 @@ Player.prototype = {
 		if (this.playstate != PLAYSTATE.PLAYING)
 			return;
 		if (this.actualprogress > this.maxprogress) {
-			this.r.resetRandomizeBorder();
 			this.playstate = PLAYSTATE.IDLE;
 			if (this.onEnd) {
 				this.onEnd();
@@ -294,8 +309,6 @@ Player.prototype = {
 		this.r = new R.GeoJSON(geojson);
 		this.map.addLayer(this.r);
 		var r = this.r;
-		r.attr('fill', 'rgba(39, 19, 10, 0.8)');
-		r.attr({stroke: "gray", "stroke-width": 0.5});
 		//r.attr('opacity', 0);
 		//r.attr('scale', 0);
 		r.moveCenter(latlng)
@@ -307,8 +320,8 @@ Player.prototype = {
 	},
 
 	displayProgress: function () {
-		this.indicator.style.width = this.actualprogress + "%";
-		this.progress_text.innerHTML = this.actualprogress + "%";
+		this.indicator.style.width = this.actualprogress/ + "%";
+		this.progress_text.innerHTML = (AREASIZE *  (this.actualprogress/100)).toFixed(2) + " m²";
 	},
 
 	start: function () {
@@ -340,14 +353,14 @@ Player.prototype = {
 
 	pause: function () {
 		this.playstate = PLAYSTATE.PAUSED;
-		this.r.stop();
+		//this.r.stop();
 	},
 
 	stop: function () {
 		this.playstate = PLAYSTATE.IDLE;
 		this.actualprogress = 0;
 		this.displayProgress();
-		this.r.stop();
+		//this.r.stop();
 	},
 
 	jumpTo: function (search) {
