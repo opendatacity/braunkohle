@@ -111,67 +111,6 @@
 		}
 	});
 
-	R.Marker = R.Layer.extend({
-		initialize: function (latlng, pathString, attr, options) {
-			R.Layer.prototype.initialize.call(this, options);
-
-			this._latlng = latlng;
-			this._pathString = (typeof pathString == 'string' ? pathString : 'M16,3.5c-4.142,0-7.5,3.358-7.5,7.5c0,4.143,7.5,18.121,7.5,18.121S23.5,15.143,23.5,11C23.5,6.858,20.143,3.5,16,3.5z M16,14.584c-1.979,0-3.584-1.604-3.584-3.584S14.021,7.416,16,7.416S19.584,9.021,19.584,11S17.979,14.584,16,14.584z');
-			this._attr = (typeof pathString == 'object' ? pathString : (attr ? attr : {'fill': '#000'}));
-		},
-
-		projectLatLngs: function () {
-			var p = this._map.latLngToLayerPoint(this._latlng);
-			var r = Raphael.pathBBox(this._pathString);
-
-			this._path = this._paper.path(this._pathString)
-				.attr(this._attr)
-				.translate(p.x - 1.05 * r.width, p.y - 1.15 * r.height)
-				.toFront();
-
-			this._set.push(this._path);
-		}
-	});
-
-	R.Pulse = R.Layer.extend({
-		initialize: function (latlng, radius, attr, pulseAttr, options) {
-			R.Layer.prototype.initialize.call(this, options);
-
-			this._latlng = latlng;
-			this._radius = (typeof radius == 'number' ? radius : 6);
-			this._attr = (typeof radius == 'object' ? radius : (typeof attr == 'object' ? attr : {'fill': '#30a3ec', 'stroke': '#30a3ec'}));
-			this._pulseAttr = (typeof radius == 'object' ? attr : typeof pulseAttr == 'object' ? pulseAttr : {
-				'stroke-width': 3,
-				'stroke': this._attr.stroke
-			});
-			this._repeat = 3;
-		},
-
-		onRemove: function (map) {
-			R.Layer.prototype.onRemove.call(this, map);
-
-			if (this._marker) this._marker.remove();
-			if (this._pulse) this._pulse.remove();
-		},
-
-		projectLatLngs: function () {
-			if (this._marker) this._marker.remove();
-			if (this._pulse) this._pulse.remove();
-
-			var p = this._map.latLngToLayerPoint(this._latlng);
-
-			this._marker = this._paper.circle(p.x, p.y, this._radius).attr(this._attr);
-			this._pulse = this._paper.circle(p.x, p.y, this._radius).attr(this._pulseAttr);
-
-			var anim = Raphael.animation({
-				'0%': {transform: 's0.3', opacity: 1.0},
-				'100%': {transform: 's3.0', opacity: 0.0, easing: '<'}
-			}, 1000);
-
-			this._pulse.animate(anim.repeat(this._repeat));
-		}
-	});
-
 	R.Polyline = R.Layer.extend({
 
 		initialize: function (latlngs, attr, options) {
@@ -201,7 +140,7 @@
 		}
 	});
 
-	R.Polygon = R.Layer.extend({
+	R.PolygonPulse = R.Layer.extend({
 
 		initialize: function (latlngs, attr, options) {
 			R.Layer.prototype.initialize.call(this, options);
@@ -213,45 +152,27 @@
 			}
 			this.scale = 0;
 			this._latlngs = latlngs;
-			this._attr = attr || {'fill': 'rgba(255, 0, 0, 0.5)', 'stroke': '#f00', 'stroke-width': 1};
-			//*ffalt
-			this._pulseAttr = {
+			this._attr = {
 				'stroke-width': 12,
-//				'fill': '#30a3ec',
 				'stroke': '#7E642D'
 			};
-			//ffalt*
-
 		},
 
 		projectLatLngs: function () {
-			//ffalt* reuse path
 			if (this._path) {
-				this._path.animate({path: this.getPathString()}, 80);
-				if (this._pulse) {
-					this._pulse.animate({path: this.getPathString()}, 80);
-				}
-				return;
+				this._path.remove();
 			}
-			//*ffalt
 			this._path = this._paper.path(this.getPathString())
 				.attr(this._attr)
 				.toBack();
 			this._set.push(this._path);
-
-			//*ffalt
-			this._pulse = this._paper.path(this.getPathString())
-				.attr(this._pulseAttr).attr('opacity', 0).attr('transform', 's0')
-				.toBack();
 			this.pulse();
-			//ffalt*
 		},
 
-		//ffalt* implement L.Layer.getBounds method
 		onRemove: function (map) {
 			R.Layer.prototype.onRemove.call(this, map);
 
-			if (this._pulse) this._pulse.remove();
+			//if (this._pulse) this._pulse.remove();
 			if (this._path) this._path.remove();
 		},
 
@@ -282,62 +203,44 @@
 					cb();
 			});
 			this._path.animate(pathanim);
-			if (scale >= 1)
-				scale = 0;
-			if (scale == 0) {
-				if (this.pulsescaleanim)
-					this._pulse.stop(this.pulsescaleanim);
-				this._pulse.attr('transform', 's0');
-			} else {
-				this.pulsescaleanim = Raphael.animation({transform: 's' + scale
-				}, duration || 0, '<', function () {
-				});
-				this._pulse.animate(this.pulsescaleanim);
-			}
+//			if (scale >= 1)
+//				scale = 0;
+			/*
+			 if (scale == 0) {
+			 if (this.pulsescaleanim)
+			 this._pulse.stop(this.pulsescaleanim);
+			 this._pulse.attr('transform', 's0');
+			 } else {
+			 this.pulsescaleanim = Raphael.animation({transform: 's' + scale
+			 }, duration || 0, '<', function () {
+			 });
+			 this._pulse.animate(this.pulsescaleanim);
+			 }
+			 */
 		},
 
 		pulse: function () {
-			var p = this._pulse;
-
 			var fadeIn = function () {
-				p.animate({
+				this._path.animate({
 					'opacity': 0.45
 				}, 500, '<', fadeOut);
 			};
-
 			var fadeOut = function () {
-				p.animate({
+				this._path.animate({
 					'opacity': 0.2
 				}, 500, '<', fadeIn);
 			};
-
 			fadeOut();
 		},
 
-		randomizeBorder: function (duration, cb) {
-			if (this._path) {
-				this._path.animate({path: this.getPathString(true)}, duration, function () {
-					cb();
-				});
-			}
+		setTime: function (time) {
+			//nop
 		},
-		resetRandomizeBorder: function () {
-			if (this._path) {
-				this._path.animate({path: this.getPathString()}, 80);
-			}
-		},
-		//*ffalt
 
-		getPathString: function (randomBorder) {
+		getPathString: function () {
 			for (var i = 0, len = this._latlngs.length, str = ''; i < len; i++) {
-				var rx = 0;
-				var ry = 0;
-				if (randomBorder) {
-					var rx = Math.floor(Math.random() * 2);
-					var ry = Math.floor(Math.random() * 2);
-				}
 				var p = this._map.latLngToLayerPoint(this._latlngs[i]);
-				str += (i ? 'L' : 'M') + (p.x + rx) + ' ' + (p.y + ry);
+				str += (i ? 'L' : 'M') + (p.x) + ' ' + (p.y);
 			}
 			str += 'Z';
 
@@ -345,7 +248,8 @@
 		}
 	});
 
-	R.PolygonGlow = R.Layer.extend({
+	R.Polygon = R.Layer.extend({
+
 		initialize: function (latlngs, attr, options) {
 			R.Layer.prototype.initialize.call(this, options);
 			if (latlngs.length == 1) {
@@ -353,47 +257,29 @@
 					latlngs = latlngs[0];
 				}
 			}
-			this._scale = 0;
+			this.scale = 0;
 			this._latlngs = latlngs;
-			this._attr = attr || {'fill': 'rgba(255, 0, 0, 1)', 'stroke': '#f00', 'stroke-width': 3};
+			this._attr = attr || {'fill': 'rgba(255, 0, 0, 0.5)', 'stroke': '#f00', 'stroke-width': 1};
+		},
+
+		projectLatLngs: function () {
+			this.originalPath = null;
+			var opacity = 1;
+			if (this._path) {
+				opacity = this._path.attr('opacity');
+				this._path.remove();
+			}
+			this._path = this._paper.path(this.getPathString())
+				.attr(this._attr)
+				.toBack();
+			this._path.attr('opacity', opacity);
+			this._set.push(this._path);
 		},
 
 		onRemove: function (map) {
 			R.Layer.prototype.onRemove.call(this, map);
-
 			if (this._path) this._path.remove();
-		},
-
-		projectLatLngs: function () {
-			//ffalt* reuse path
-			if (this._path) {
-				this._path.animate({path: this.getPathString()}, 1000);
-				return;
-			}
-			//*ffalt
-
-			this._path = this._paper.path(this.getPathString())
-				.attr(this._attr)
-				.toBack();
-
-			var p = this._path;
-
-			var fadeIn = function () {
-				this._scale += 0.01;
-				p.animate({
-					'fill-opacity': 0.25,
-					transform: 's' + this._scale
-				}, 1000, '<', fadeOut);
-			};
-
-			var fadeOut = function () {
-				p.animate({
-					'fill-opacity': 1,
-					transform: 's' + this._scale
-				}, 1000, '<', fadeIn);
-			};
-
-			fadeOut();
+			this.originalPath = null;
 		},
 
 		getBounds: function () {
@@ -409,149 +295,235 @@
 			var center = this.getBounds().getCenter();
 			var offset = new L.LatLng(center.lat - latlng.lat, center.lng - latlng.lng);
 			for (var i = 0; i < this._latlngs.length; i++) {
-				for (var j = 0; j < this._latlngs[i].length; j++) {
-					for (var k = 0; k < this._latlngs[i][j].length; k++) {
-						var ll = this._latlngs[i][j][k];
-						this._latlngs[i][j][k] = new L.LatLng(ll.lat - offset.lat, ll.lng - offset.lng);
+				var ll = this._latlngs[i];
+				this._latlngs[i] = new L.LatLng(ll.lat - offset.lat, ll.lng - offset.lng);
+			}
+			this.projectLatLngs();
+		},
+
+		setScale: function (scale, duration, cb) {
+			this.scale = scale;
+			var pathanim = Raphael.animation({transform: 's' + scale}, duration || 0, '<', function () {
+				if (cb)
+					cb();
+			});
+			this._path.animate(pathanim);
+		},
+
+		originalPath: false,
+
+		setTime: function (time) {
+			function init(path) {
+//				console.log(path);
+				var newPath = [];
+
+				// Finde Mittelpunkt
+				var
+					xMin = 1e10,
+					xMax = -1e10,
+					yMin = 1e10,
+					yMax = -1e10;
+
+				for (var i = 0; i < path.length - 1; i++) {
+					var point = path[i];
+					newPath.push([point[1], point[2]]);
+
+					if (xMin > point[1]) xMin = point[1];
+					if (xMax < point[1]) xMax = point[1];
+					if (yMin > point[2]) yMin = point[2];
+					if (yMax < point[2]) yMax = point[2];
+				}
+
+				var
+					xCenter = (xMin + xMax) / 2,
+					yCenter = (yMin + yMax) / 2,
+					areaFactor = 0.2 * Math.sqrt((xMax - xMin) * (yMax - yMin));
+
+				var
+					n = newPath.length,
+					ids = [16, 17, 350, 500];
+
+				/*
+				 xCenter = 0;
+				 yCenter = 0;
+				 for (var i = 0; i < ids.length; i++) {
+				 xCenter += newPath[ids[i]][0];
+				 yCenter += newPath[ids[i]][1];
+				 }
+				 xCenter /= ids.length;
+				 yCenter /= ids.length;
+				 */
+
+				var times = [];
+
+				for (var i = 0; i < ids.length; i++) {
+					times[ids[i]] = [0, areaFactor * dist(ids[i]), undefined];
+				}
+
+				for (var i = 0; i < ids.length - 1; i++) {
+					calcTimes(ids[i], ids[i + 1]);
+				}
+
+				calcTimes(ids[ids.length - 1], ids[0] + n);
+
+				function dist(i, j) {
+					i = i % n;
+					var dx, dy;
+					if (j !== undefined) {
+						j = j % n;
+						dx = newPath[i][0] - newPath[j][0];
+						dy = newPath[i][1] - newPath[j][1];
+					} else {
+						dx = newPath[i][0] - xCenter;
+						dy = newPath[i][1] - yCenter;
+					}
+					return Math.sqrt(dx * dx + dy * dy);
+				}
+
+				function calcTimes(i0, i1) {
+					if (i1 - i0 <= 1) return;
+
+					var
+						p0 = newPath[i0 % n],
+						p1 = newPath[i1 % n],
+						maxD = -1,
+						maxI = i0 + 1,
+						maxJ = i0 + 1;
+
+					for (var i = i0 + 1; i < i1; i++) {
+						var j = i % n;
+						var p = newPath[j];
+						var d = Math.abs((p[0] - p0[0]) * (p[1] - p1[1]) - (p[1] - p0[1]) * (p[0] - p1[0]));
+						if (maxD < d) {
+							maxD = d;
+							maxI = i;
+							maxJ = j;
+						}
+					}
+
+					var bestI = (times[i0 % n][1] > times[i1 % n][1]) ? i0 : i1;
+					var t0 = times[bestI % n][1];
+
+					times[maxJ] = [
+						t0,
+						t0 + maxD,
+						i0 % n,
+						i1 % n
+					];
+
+					/*
+					 times[maxJ] = [
+					 times[bestI % n][1],
+					 times[bestI % n][1] + dist(bestI, maxJ),
+					 bestI % n
+					 ];
+					 */
+
+					calcTimes(i0, maxI);
+					calcTimes(maxI, i1);
+				}
+
+				var maxTimes = 0;
+				for (var i = 0; i < n; i++) if (maxTimes < times[i][1]) maxTimes = times[i][1];
+				for (var i = 0; i < n; i++) {
+					times[i][0] /= maxTimes;
+					times[i][1] /= maxTimes;
+				}
+
+				var order = [];
+				for (var i = 0; i < n; i++) order[i] = i;
+				order.sort(function (a, b) {
+					return times[a][0] - times[b][0];
+				});
+
+				//console.log(order);
+
+				return {
+					path: newPath,
+					times: times,
+					order: order,
+					center: [xCenter, yCenter]
+				}
+			}
+
+			if (!this.originalPath) {
+				this.originalPath = init(this._path.attr('path'));
+				//console.log(this.originalPath);
+			}
+//			console.log(this.originalPath);
+
+			var
+				path = [],
+				path0 = this.originalPath.path,
+				times = this.originalPath.times,
+				order = this.originalPath.order,
+				center = this.originalPath.center;
+
+			for (var j = 0; j < order.length; j++) {
+				var i = order[j];
+				if (times[i][0] < time) {
+					if (times[i][1] > time) {
+						// interpoliere
+						var a = (time - times[i][0]) / (times[i][1] - times[i][0]);
+						var p;
+						if (times[i][2] === undefined) {
+							// interpoliere vom Zentrum
+							p = center;
+						} else {
+							// interpoliere vom referenzpunkt
+							p = [
+								(path0[times[i][2]][0] + path0[times[i][3]][0]) / 2,
+								(path0[times[i][2]][1] + path0[times[i][3]][1]) / 2
+							];
+						}
+						path[i] = [
+							p[0] + (path0[i][0] - p[0]) * a,
+							p[1] + (path0[i][1] - p[1]) * a
+						];
+					} else {
+						// endwert
+						path[i] = [path0[i][0], path0[i][1]];
 					}
 				}
 			}
+
+			var result = [];
+			for (var i = 0; i < path.length; i++) {
+				if (path[i]) result.push(['L', path[i][0], path[i][1]]);
+			}
+
+			if (result.length < 2) {
+				result = [
+					['M', center[0], center[1]],
+					['Z']
+				]
+			} else {
+				result[0][0] = 'M';
+				result.push(['Z']);
+			}
+
+//			console.log(result);
+
+
+			//this.originalPath = path;
+			/*
+			 var p = this._path.attr('path');
+			 //if (time == 0) console.log(p);
+			 for (var i = 0; i < p.length-1; i++) {
+			 p[i][1] += (Math.random() - 0.5)*2;
+			 p[i][2] += (Math.random() - 0.5)*2;
+			 }
+			 */
+			this._path.attr('path', result)
 		},
-		//*ffalt
 
 		getPathString: function () {
 			for (var i = 0, len = this._latlngs.length, str = ''; i < len; i++) {
 				var p = this._map.latLngToLayerPoint(this._latlngs[i]);
-				str += (i ? 'L' : 'M') + p.x + ' ' + p.y;
+				str += (i ? 'L' : 'M') + (p.x) + ' ' + (p.y);
 			}
 			str += 'Z';
-
 			return str;
-		}
-	});
-
-	R.Bezier = R.Layer.extend({
-		initialize: function (latlngs, attr, options) {
-			R.Layer.prototype.initialize.call(this, options);
-
-			this._latlngs = latlngs;
-			this._attr = attr;
-		},
-
-		projectLatLngs: function () {
-			if (this._path) this._path.remove();
-
-			var start = this._map.latLngToLayerPoint(this._latlngs[0]),
-				end = this._map.latLngToLayerPoint(this._latlngs[1]),
-				cp = this.getControlPoint(start, end);
-
-			this._path = this._paper.path('M' + start.x + ' ' + start.y + 'Q' + cp.x + ' ' + cp.y + ' ' + end.x + ' ' + end.y)
-				.attr(this._attr)
-				.toBack();
-
-			this._set.push(this._path);
-		},
-
-		getControlPoint: function (start, end) {
-			var cp = { x: 0, y: 0 };
-			cp.x = start.x + (end.x - [start.x]) / 2;
-			cp.y = start.y + (end.y - [start.y]) / 2;
-			var amp = 0;
-
-			if (this.closeTo(start.x, end.x) && !this.closeTo(start.y, end.y)) {
-				amp = (start.x - end.x) * 1 + 15 * (start.x >= end.x ? 1 : -1);
-				cp.x = Math.max(start.x, end.x) + amp;
-			} else {
-				amp = (end.y - start.y) * 1.5 + 15 * (start.y < end.y ? 1 : -1);
-				cp.y = Math.min(start.y, end.y) + amp;
-			}
-			return cp;
-		},
-
-		closeTo: function (a, b) {
-			var t = 15;
-			return (a - b > -t && a - b < t);
-		}
-	});
-
-	R.BezierAnim = R.Layer.extend({
-		initialize: function (latlngs, attr, cb, options) {
-			R.Layer.prototype.initialize.call(this, options);
-
-			this._latlngs = latlngs;
-			this._attr = attr;
-			this._cb = cb;
-		},
-
-		onRemove: function (map) {
-			R.Layer.prototype.onRemove.call(this, map);
-
-			if (this._path) this._path.remove();
-			if (this._sub) this._sub.remove();
-		},
-
-		projectLatLngs: function () {
-			if (this._path) this._path.remove();
-			if (this._sub) this._sub.remove();
-
-			var self = this,
-				start = this._map.latLngToLayerPoint(this._latlngs[0]),
-				end = this._map.latLngToLayerPoint(this._latlngs[1]),
-				cp = this.getControlPoint(start, end),
-				pathString = 'M' + start.x + ' ' + start.y + 'Q' + cp.x + ' ' + cp.y + ' ' + end.x + ' ' + end.y,
-				line = this._paper.path(pathString).hide();
-
-			this._paper.customAttributes.alongBezier = function (a) {
-				var r = this.data('reverse');
-				var len = this.data('pathLength');
-
-				return {
-					path: this.data('bezierPath').getSubpath(r ? (1 - a) * len : 0, r ? len : a * len)
-				};
-			};
-
-			var sub = this._sub = this._paper.path()
-				.data('bezierPath', line)
-				.data('pathLength', line.getTotalLength())
-				.data('reverse', false)
-				.attr({
-					'stroke': '#f00',
-					'alongBezier': 0,
-					'stroke-width': 3
-				});
-
-			sub.stop().animate({
-				alongBezier: 1
-			}, 500, function () {
-				self._cb();
-				sub.data('reverse', true);
-				sub.stop().animate({
-					'alongBezier': 0
-				}, 500, function () {
-					sub.remove();
-				});
-			});
-		},
-
-		getControlPoint: function (start, end) {
-			var cp = { x: 0, y: 0 };
-			cp.x = start.x + (end.x - [start.x]) / 2;
-			cp.y = start.y + (end.y - [start.y]) / 2;
-			var amp = 0;
-
-			if (this.closeTo(start.x, end.x) && !this.closeTo(start.y, end.y)) {
-				amp = (start.x - end.x) * 1 + 15 * (start.x >= end.x ? 1 : -1);
-				cp.x = Math.max(start.x, end.x) + amp;
-			} else {
-				amp = (end.y - start.y) * 1.5 + 15 * (start.y < end.y ? 1 : -1);
-				cp.y = Math.min(start.y, end.y) + amp;
-			}
-			return cp;
-		},
-
-		closeTo: function (a, b) {
-			var t = 15;
-			return (a - b > -t && a - b < t);
 		}
 	});
 
@@ -687,20 +659,18 @@
 			}, this);
 		},
 
-		randomizeBorder: function (duration, cb) {
-			this.eachLayer(function (layer) {
-				layer.randomizeBorder(duration, cb);
-			}, this);
-		},
-		resetRandomizeBorder: function () {
-			this.eachLayer(function (layer) {
-				layer.resetRandomizeBorder();
-			}, this);
-		},
 		setScale: function (scale, duration, cb) {
 			this.eachLayer(function (layer) {
 				layer.setScale(scale, duration, cb);
 			}, this);
+		},
+
+		setTime: function (time, callback) {
+			this.eachLayer(function (layer) {
+				layer.setTime(time);
+			}, this);
+			if (callback)
+				setTimeout(callback, 60);
 		},
 		//*ffalt
 
@@ -730,6 +700,7 @@
 
 			this.addLayer(layer);
 		}
+
 	});
 
 	L.Util.extend(R.GeoJSON, {

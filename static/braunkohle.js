@@ -2,10 +2,10 @@ var WELZOW_POINT = new L.LatLng(51.58474991408093, 14.226608276367188);
 var MINZOOM = 8;
 var MAXZOOM = 15;
 var DEFAULT_ZOOM = 11;
-var DURATION = 170; //of x% animation
-var DURATIONSTEP = 1; //x% animation
+var DURATIONSTEP = 0.38; //x% animation
+var AREASIZE = 10800; //area size in ha
 
-var INTRO = 'Klicken Sie auf die Karte um einen Startpunkt auszuwählen und auf den Start-Knopf unten links um die Animation zu starten.';
+var INTRO = 'Das große Baggern<br/>Vattenfall will in der Lausitz noch mehr Braunkohle abbaggern und so Tausende von Menschen aus ihren Häusern vertreiben. Aktuell geht es um die Erweiterung des Tagebaus Welzow Süd. Wie groß das geplante Loch wäre, ist schwer vorstellbar. Diese Animation hilft euch dabei: Einfach einen Städtenamen eingeben und das große Graben beginnt.';
 var LEGALIES =
 	'powered by' + '<br/>' +
 		'<a href="http://leafletjs.com/" target="_blank">Leaflet</a>' + '<br/>' +
@@ -94,12 +94,14 @@ function init() {
 		btn_play.show();
 		btn_pause.hide();
 	};
-	btn_play.click(function (event) {
+	player.onStart = function () {
 		audio.play();
-		player.start();
 		btn_play.hide();
 		btn_pause.show();
 		btn_stop.removeAttr('disabled');
+	};
+	btn_play.click(function (event) {
+		player.start();
 	});
 	btn_stop.click(function (event) {
 		audio.stop();
@@ -136,6 +138,14 @@ function init() {
 			);
 		}
 	});
+	if (screenfull.enabled) {
+		$('#fullscreen').click(function (event) {
+			screenfull.toggle();
+			player.autofit();
+		});
+	} else {
+		$('#fullscreen').hide();
+	}
 	$('#search').typeahead({
 		source: geocode.name,
 		updater: function (item) {
@@ -160,7 +170,7 @@ function AudioPlayer() {
 		customError: '',
 		success: function (media) {
 			caller.audio = media;
-			caller.audio.volume = (caller.muted ? 0 : 1);
+			caller.applyMuted();
 			caller.audio.load();
 		}});
 }
@@ -177,13 +187,17 @@ AudioPlayer.prototype = {
 		}
 	},
 	pause: function () {
-		if (this.audio)
+		if (this.audio) {
 			this.audio.pause();
+		}
+	},
+	applyMuted: function () {
+		if (this.audio)
+			this.audio.volume = (this.muted ? 0 : 1);
 	},
 	setMute: function (muted) {
 		this.muted = muted;
-		if (this.audio)
-			this.audio.volume = (this.muted ? 0 : 1);
+		this.applyMuted();
 	}
 };
 
@@ -199,13 +213,16 @@ function Player(latlng, geometry, zoom) {
 	this.playstate = PLAYSTATE.IDLE;
 	this.initMap(latlng, zoom);
 	this.addOSMLayer();
+	this.displayProgress();
 	this.addRLayer(latlng, geometry);
-	this.showTextOverlay(INTRO)
-	this.marker = L.marker(latlng).addTo(this.map);
+	this.showTextOverlay(INTRO);
+	this.addMarker(latlng);
 	this.addMouseClick();
 }
 
 Player.prototype = {
+
+	zoomdisabled: false,
 
 	initMap: function (latlng, zoom) {
 		this.map = L.map('map', {
@@ -219,22 +236,38 @@ Player.prototype = {
 		}).setView(latlng, zoom);
 		var caller = this;
 		this.map.on('zoomstart', function (event) {
-			caller.r.attr('opacity', 0);
-			if (caller.playstate != PLAYSTATE.IDLE) {
-				caller.r.stop();
-				caller.r.attr('transform', "s1");
+			if (caller.playstate == PLAYSTATE.PLAYING) {
+				caller.zoomdisabled = true;
 			}
 		});
 		this.map.on('zoomend', function (event) {
-			if (caller.playstate != PLAYSTATE.IDLE) {
-				caller.r.attr('transform', 's' + caller.actualprogress / caller.maxprogress);
-				if (caller.playstate == PLAYSTATE.PLAYING)
-					caller.animate();
-				caller.r.attr('opacity', 1);
-			} else if (caller.actualprogress > 0) {
-				caller.r.attr('opacity', 1);
+			if (caller.zoomdisabled) {
+				caller.zoomdisabled = false;
+				caller.animate();
 			}
-		})
+		});
+	},
+
+	addMarker: function (latlng) {
+		var baggerIcon = L.icon({
+			iconUrl: '/static/bagger.png',
+//		shadowUrl: '/static/bagger.png',
+			iconSize: [60, 60], // size of the icon
+			shadowSize: [60, 60], // size of the shadow
+			iconAnchor: [30, 30], // point of the icon which will correspond to marker's location
+			shadowAnchor: [30, 30],  // the same for the shadow
+			popupAnchor: [0, 0] // point from which the popup should open relative to the iconAnchor
+		});
+
+		this.marker = L.marker(latlng, {
+			icon: baggerIcon,
+			opacity: 0.5,
+			title: 'Klicken um zu Starten'
+		}).addTo(this.map);
+		var caller = this;
+		this.marker.on('click', function (e) {
+			caller.start();
+		});
 	},
 
 	hideTextOverlay: function () {
@@ -268,23 +301,22 @@ Player.prototype = {
 	},
 
 	animate: function () {
-		if (this.playstate != PLAYSTATE.PLAYING)
+		if (this.zoomdisabled || (this.playstate != PLAYSTATE.PLAYING))
 			return;
 		if (this.actualprogress > this.maxprogress) {
-			this.r.resetRandomizeBorder();
+			this.actualprogress = this.maxprogress;
 			this.playstate = PLAYSTATE.IDLE;
 			if (this.onEnd) {
 				this.onEnd();
 			}
+			this.displayProgress();
 			this.map.addLayer(this.marker);
-			//console.log('anim end');
 			return;
 		}
 		this.displayProgress();
-		var scale = this.actualprogress / this.maxprogress;
-		//console.log(scale);
+		var time = this.actualprogress / this.maxprogress;
 		var caller = this;
-		this.r.setScale(scale, DURATION, function () {
+		this.r.setTime(time, function () {
 			caller.animate();
 		});
 		this.actualprogress += DURATIONSTEP;
@@ -293,12 +325,8 @@ Player.prototype = {
 	addRLayer: function (latlng, geojson) {
 		this.r = new R.GeoJSON(geojson);
 		this.map.addLayer(this.r);
-		var r = this.r;
-		r.attr('fill', 'rgba(39, 19, 10, 0.8)');
-		r.attr({stroke: "gray", "stroke-width": 0.5});
-		r.attr('opacity', 0);
-		r.attr('scale', 0);
-		r.moveCenter(latlng)
+		this.r.attr('opacity', 0);
+		this.r.moveCenter(latlng)
 	},
 
 	addOSMLayer: function () {
@@ -307,8 +335,11 @@ Player.prototype = {
 	},
 
 	displayProgress: function () {
-		this.indicator.style.width = this.actualprogress + "%";
-		this.progress_text.innerHTML = this.actualprogress + "%";
+		this.indicator.style.width = this.actualprogress.toFixed(0) + "%";
+		var size = AREASIZE * (this.actualprogress / 100);
+		this.progress_text.innerHTML =
+			(size / 100).toFixed(2) + " km² - " +
+				(size).toFixed(2) + " Hektar";
 	},
 
 	start: function () {
@@ -319,36 +350,33 @@ Player.prototype = {
 			this.map.removeLayer(this.marker);
 			this.actualprogress = 0;
 			this.map.setView(this.marker.getLatLng(), this.map.getZoom());
-
-//			var southWest = new L.LatLng(route.south, route.west),
-//				northEast = new L.LatLng(route.north, route.east);
-//			geotrace.bounds = new L.LatLngBounds(southWest, northEast);
-//			map.fitBounds(this.geotrace.bounds);
-
 			this.r.moveCenter(this.marker.getLatLng());
 			this.r.attr('opacity', 1);
-			this.r.attr('transform', "s0");
+			if (this.onStart)
+				this.onStart();
 		}
 		this.playstate = PLAYSTATE.PLAYING;
 		this.animate();
 	},
 
 	reset: function () {
-		this.r.attr('opacity', 1);
-		this.r.setScale(0, 1);
-		this.map.addLayer(this.marker);
+		this.r.setTime(0);
+		this.marker.addTo(this.map);
 	},
 
 	pause: function () {
 		this.playstate = PLAYSTATE.PAUSED;
-		this.r.stop();
 	},
 
 	stop: function () {
 		this.playstate = PLAYSTATE.IDLE;
 		this.actualprogress = 0;
 		this.displayProgress();
-		this.r.stop();
+	},
+
+	autofit: function () {
+		//	this.r.moveCenter(this.marker.getLatLng());
+		//	this.map.fitBounds(this.r.getBounds());
 	},
 
 	jumpTo: function (search) {
@@ -367,9 +395,10 @@ Player.prototype = {
 			var p = new L.LatLng(geocode.lat[index], geocode.lng[index]);
 			this.marker.setLatLng(p);
 			this.map.setView(p, this.map.getZoom());
+			this.autofit();
 			return true;
 		} else {
-			console.log('kenn ich leider nich ' + search); //FIX ME
+//			console.log('kenn ich leider nich ' + search); //FIX ME
 		}
 		return false;
 	}
