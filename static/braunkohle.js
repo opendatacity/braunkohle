@@ -12,6 +12,7 @@ var LEGALIES =
 		'<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> (<a href="http://opendatacommons.org/licenses/odbl/" target="_blank">ODbL</a>)' + '<br/>' +
 		'<a href="http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY</a>)' + '<br/>' +
 		'<a href="http://opengeodb.org/wiki/OpenGeoDB" target="_blank">OpenGeoDB</a> ' + '<br/>' +
+		'<a href="http://mapbox.com" target="_blank">Mapbox</a> ' + '<br/>' +
 		'' + '<br/>';
 
 $(document).ready(function () {
@@ -310,7 +311,7 @@ Player.prototype = {
 				this.onEnd();
 			}
 			this.displayProgress();
-			this.map.addLayer(this.marker);
+//			this.map.addLayer(this.marker);
 			return;
 		}
 		this.displayProgress();
@@ -330,8 +331,7 @@ Player.prototype = {
 	},
 
 	addOSMLayer: function () {
-		L.tileLayer('http://tiles.odcdn.de/europe' + '/{z}/{x}/{y}.png', {attribution: ''}).addTo(this.map);
-//		L.tileLayer('http://api.tiles.mapbox.com/v3/ffalt.map-63b7bl05' + '/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://mapbox.com">Mapbox</a>'	}).addTo(this.map);
+		L.tileLayer('http://api.tiles.mapbox.com/v3/gpde.map-82g35l8h' + '/{z}/{x}/{y}.png', {attribution: ''	}).addTo(this.map);
 	},
 
 	displayProgress: function () {
@@ -347,7 +347,7 @@ Player.prototype = {
 			return;
 		this.hideTextOverlay();
 		if (this.playstate != PLAYSTATE.PAUSED) {
-			this.map.removeLayer(this.marker);
+//			this.map.removeLayer(this.marker);
 			this.actualprogress = 0;
 			this.map.setView(this.marker.getLatLng(), this.map.getZoom());
 			this.r.moveCenter(this.marker.getLatLng());
@@ -361,7 +361,7 @@ Player.prototype = {
 
 	reset: function () {
 		this.r.setTime(0);
-		this.marker.addTo(this.map);
+//		this.marker.addTo(this.map);
 	},
 
 	pause: function () {
