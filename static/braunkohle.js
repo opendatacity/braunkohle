@@ -8,12 +8,12 @@ var AREASIZE = 10800; //area size in ha
 var INTRO = 'Das große Baggern<br/>Vattenfall will in der Lausitz noch mehr Braunkohle abbaggern und so Tausende von Menschen aus ihren Häusern vertreiben. Aktuell geht es um die Erweiterung des Tagebaus Welzow Süd. Wie groß das geplante Loch wäre, ist schwer vorstellbar. Diese Animation hilft euch dabei: Einfach einen Städtenamen eingeben und das große Graben beginnt.';
 var LEGALIES =
 	'powered by' + '<br/>' +
-		'<a href="http://leafletjs.com/" target="_blank">Leaflet</a>' + '<br/>' +
-		'<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> (<a href="http://opendatacommons.org/licenses/odbl/" target="_blank">ODbL</a>)' + '<br/>' +
-		'<a href="http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY</a>)' + '<br/>' +
-		'<a href="http://opengeodb.org/wiki/OpenGeoDB" target="_blank">OpenGeoDB</a> ' + '<br/>' +
-		'<a href="http://mapbox.com" target="_blank">Mapbox</a> ' + '<br/>' +
-		'' + '<br/>';
+		'<a href="http://leafletjs.com/" target="_blank">Leaflet</a>' + ', ' +
+		'<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> (<a href="http://opendatacommons.org/licenses/odbl/" target="_blank">ODbL</a>)' + ', ' +
+		'<a href="http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY</a>)' + ', ' +
+		'<a href="http://opengeodb.org/wiki/OpenGeoDB" target="_blank">OpenGeoDB</a> ' + ', ' +
+		'<a href="http://mapbox.com" target="_blank">Mapbox</a> ' + '<br/>';
+
 
 $(document).ready(function () {
 	init();

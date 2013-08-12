@@ -72,7 +72,7 @@ body, .leaflet-container, input, button, select, textarea {
 		right: 0;
 		margin: 2px;
 		position: absolute;
-		bottom: 32px;
+		bottom: 54px;
 	}
 
 		.leaflet-top, .leaflet-bottom {
@@ -88,8 +88,8 @@ body, .leaflet-container, input, button, select, textarea {
 		.map-overlay {
 			color: white;
 			margin-right: 10px;
-			padding: 8px;
-			background-color: rgba(0, 0, 0, 0.7);
+			padding: 10px;
+			background-color: rgba(0, 0, 0, 0.8);
 		}
 
 		.map-overlay a {
@@ -103,10 +103,41 @@ body, .leaflet-container, input, button, select, textarea {
 		bottom: 0;
 		left: 0;
 		right: 0;
-		height: 32px;
+		height: 54px;
 		background: #353535;
 		border-color: #202020;
 	}
+		#action-link {
+			text-align: center;
+			width: 100%;
+			font-size: 12px !important;
+			line-height: 12px !important;
+			margin-top: 4px;
+			margin-bottom: 4px;
+			padding: 0 !important;
+			font-family: 'Open Sans', serif !important;
+			-webkit-transition-duration: 200ms;
+			-webkit-transition-property: background;
+			-webkit-transition-timing-function: ease-in-out;
+			-moz-transition-duration: 200ms;
+			-moz-transition-property: background;
+			-moz-transition-timing-function: ease-in-out;
+			-o-transition-duration: 200ms;
+			-o-transition-property: background;
+			-o-transition-timing-function: ease-in-out;
+			transition-duration: 200ms;
+			transition-property: background;
+			border:0;
+			background:#353535;
+			color:#eeeeee !important;
+		}
+
+		#action-link a {
+			color: #31a7dc;
+		}
+		#action-link a:hover {
+			color: #beba00;
+		}
 
 		#progress {
 			height: 4px;
