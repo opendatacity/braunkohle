@@ -1,3 +1,5 @@
+var BTN_IMG_URL = '/static/bagger.png';
+
 var WELZOW_POINT = new L.LatLng(51.58474991408093, 14.226608276367188);
 var MINZOOM = 8;
 var MAXZOOM = 15;
@@ -251,8 +253,8 @@ Player.prototype = {
 
 	addMarker: function (latlng) {
 		var baggerIcon = L.icon({
-			iconUrl: '/static/bagger.png',
-//		shadowUrl: '/static/bagger.png',
+			iconUrl: BTN_IMG_URL,
+//		shadowUrl: BTN_IMG_URL,
 			iconSize: [60, 60], // size of the icon
 			shadowSize: [60, 60], // size of the shadow
 			iconAnchor: [30, 30], // point of the icon which will correspond to marker's location
