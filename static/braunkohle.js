@@ -8,6 +8,7 @@ var DURATIONSTEP = 0.38; //x% animation
 var AREASIZE = 10800; //area size in ha
 
 var INTRO = 'Das große Baggern<br/>Vattenfall will in der Lausitz noch mehr Braunkohle abbaggern und so Tausende von Menschen aus ihren Häusern vertreiben. Aktuell geht es um die Erweiterung des Tagebaus Welzow Süd. Wie groß das geplante Loch wäre, ist schwer vorstellbar. Diese Animation hilft euch dabei: Einfach einen Städtenamen eingeben und das große Graben beginnt.';
+var FIRSTHINT = 'Hier Städtenamen eingeben'
 var LEGALIES =
 	'powered by' + '<br/>' +
 		'<a href="http://leafletjs.com/" target="_blank">Leaflet</a>' + ', ' +
@@ -15,7 +16,8 @@ var LEGALIES =
 		'<a href="http://www.freesound.org/people/ERH/sounds/34012/" target="_blank">cinematic-deep-bass-rumble by erh</a> [modified] (<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank">CC-BY</a>)' + ', ' +
 		'<a href="http://opengeodb.org/wiki/OpenGeoDB" target="_blank">OpenGeoDB</a> ' + ', ' +
 		'<a href="http://mapbox.com" target="_blank">Mapbox</a> ' + '<br/>';
-
+var MARKERHINT = 'Zum Starten hier klicken oder in die Karte um einen Startpunkt festzulegen';
+var player;
 
 $(document).ready(function () {
 	init();
@@ -70,13 +72,15 @@ function init() {
 		var query = getUrlVars();
 		if ((query.z) && (!isNaN(query.z))) {
 			var qz = parseInt(query.z);
-			if ((qz >= MINZOOM) && (qz >= MAXZOOM))
+			if ((qz >= MINZOOM) && (qz <= MAXZOOM))
 				zoom = qz;
 		}
 		if (query.city) {
 			var qp = searchCity(query.city);
 			if (qp) p = qp;
 		}
+		console.log(query.city);
+
 		if ((query.lat) && (query.lng)) {
 			qp = new L.LatLng(query.lat, query.lng);
 			if (qp) p = qp;
@@ -91,7 +95,7 @@ function init() {
 	var btn_mute = $('#mute');
 	var btn_unmute = $('#unmute');
 	var audio = new AudioPlayer();
-	var player = new Player(p, braunkohle_geojson.features[0].geometry, zoom);
+	player = new Player(p, braunkohle_geojson.features[0].geometry, zoom);
 	player.onEnd = function () {
 		audio.stop();
 		btn_play.show();
@@ -144,7 +148,6 @@ function init() {
 	if (screenfull.enabled) {
 		$('#fullscreen').click(function (event) {
 			screenfull.toggle();
-			player.autofit();
 		});
 	} else {
 		$('#fullscreen').hide();
@@ -156,6 +159,74 @@ function init() {
 			return item;
 		}
 	});
+	initEmbed();
+}
+
+function initEmbed() {
+	var embed_overlay = $('#embed-overlay');
+	$('#share').click(function (evt) {
+		if ($('#embed-overlay:visible').length === 0) {
+			embed_overlay.fadeIn('fast');
+		}
+	});
+
+	var clickIn = false;
+	embed_overlay.click(function (evt) {
+		if (!clickIn) {
+			embed_overlay.fadeOut('fast');
+		}
+		clickIn = false;
+	});
+	$('#embed-content').click(function (evt) {
+		clickIn = true;
+	});
+	$('#form-close').click(function (evt) {
+		embed_overlay.fadeOut('fast');
+	});
+	var url = document.referrer || document.location.href;
+	$('#social-fb').attr('href', 'http://www.facebook.com/sharer/sharer.php?s=100&p[url]=' + encodeURIComponent(url) + '&p[title]=BlindText...');
+	$('#social-twitter').attr('href', 'https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=BlindText...');
+
+	var formsearch = $('#form-search');
+	formsearch.typeahead({source: geocode.name});
+	if ($('#embed-form').length) {
+		var $f = $('#embed-form');
+		var $url = document.location.href;
+		var embedCode = function () {
+			var $size = $('input:radio[name=size]:checked', $f).val();
+			var $src = $('input:radio[name=src]:checked', $f).val();
+			$size = ($size === "") ? "large" : $size;
+			$('#embed-size', $f).show();
+			switch ($size) {
+				case 'large':
+					var $wh = 'width="800" height="520"';
+					break;
+				case 'medium':
+					var $wh = 'width="480" height="520"';
+					break;
+				case 'small':
+					var $wh = 'width="360" height="360"';
+					break;
+			}
+			var pos = '';
+			if ($src === 'current') {
+				var latlng = player.getCurrentLatLng();
+				pos = '?lat=' + latlng.lat + '&lng=' + latlng.lng;
+			} else {
+				pos = formsearch.val();
+				if (pos) {
+					pos = '?city=' + encodeURIComponent(pos);
+				}
+			}
+			var $code = '<iframe src="' + $url + pos + '" ' + $wh + ' scrolling="no" frameborder="0"  webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
+			$('#embed-code', $f).text($code);
+		};
+		embedCode();
+		$(":input", $f).change(function () {
+			embedCode();
+		});
+	}
+
 }
 
 function AudioPlayer() {
@@ -219,6 +290,7 @@ function Player(latlng, geometry, zoom) {
 	this.displayProgress();
 	this.addRLayer(latlng, geometry);
 	this.showTextOverlay(INTRO);
+	this.showFirstHint(FIRSTHINT);
 	this.addMarker(latlng);
 	this.addMouseClick();
 }
@@ -265,7 +337,7 @@ Player.prototype = {
 		this.marker = L.marker(latlng, {
 			icon: baggerIcon,
 			opacity: 0.5,
-			title: 'Klicken um zu Starten'
+			title: MARKERHINT
 		}).addTo(this.map);
 		var caller = this;
 		this.marker.on('click', function (e) {
@@ -278,10 +350,24 @@ Player.prototype = {
 			this.legend.removeFrom(this.map);
 			this.legend = null;
 		}
+		if (this.firstHint) {
+			this.firstHint.removeFrom(this.map);
+			this.firstHint = null;
+		}
 	},
 
 	hasTextOverlay: function () {
 		return (this.legend ? true : false);
+	},
+
+	showFirstHint: function (text) {
+		this.firstHint = L.control({position: 'topright'});
+		this.firstHint.onAdd = function (map) {
+			var div = L.DomUtil.create('div', 'map-overlay');
+			$(div).html(text + ' <i class="icon-arrow-up"></i>');
+			return div;
+		};
+		this.firstHint.addTo(this.map);
 	},
 
 	showTextOverlay: function (text) {
@@ -298,8 +384,10 @@ Player.prototype = {
 	addMouseClick: function () {
 		var caller = this;
 		this.map.on('click', function (event) {
-			caller.hideTextOverlay();
-			caller.marker.setLatLng(event.latlng);
+			if (caller.hasTextOverlay())
+				caller.hideTextOverlay();
+			else
+				caller.marker.setLatLng(event.latlng);
 		});
 	},
 
@@ -333,7 +421,9 @@ Player.prototype = {
 	},
 
 	addOSMLayer: function () {
-		L.tileLayer('http://api.tiles.mapbox.com/v3/gpde.map-82g35l8h' + '/{z}/{x}/{y}.png', {attribution: ''	}).addTo(this.map);
+//		L.tileLayer('http://api.tiles.mapbox.com/v3/gpde.map-82g35l8h' + '/{z}/{x}/{y}.png', {attribution: ''    }).addTo(this.map);
+		L.tileLayer('http://tiles.odcdn.de/europe' + '/{z}/{x}/{y}.png', {attribution: ''}).addTo(this.map);
+//		L.tileLayer('http://api.tiles.mapbox.com/v3/ffalt.map-63b7bl05' + '/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://mapbox.com">Mapbox</a>'	}).addTo(this.map);
 	},
 
 	displayProgress: function () {
@@ -344,12 +434,15 @@ Player.prototype = {
 				(size).toFixed(2) + " Hektar";
 	},
 
+	getCurrentLatLng: function () {
+		return this.marker.getLatLng();
+	},
+
 	start: function () {
 		if (this.playstate == PLAYSTATE.PLAYING)
 			return;
 		this.hideTextOverlay();
 		if (this.playstate != PLAYSTATE.PAUSED) {
-//			this.map.removeLayer(this.marker);
 			this.actualprogress = 0;
 			this.map.setView(this.marker.getLatLng(), this.map.getZoom());
 			this.r.moveCenter(this.marker.getLatLng());
@@ -363,7 +456,6 @@ Player.prototype = {
 
 	reset: function () {
 		this.r.setTime(0);
-//		this.marker.addTo(this.map);
 	},
 
 	pause: function () {
@@ -374,11 +466,6 @@ Player.prototype = {
 		this.playstate = PLAYSTATE.IDLE;
 		this.actualprogress = 0;
 		this.displayProgress();
-	},
-
-	autofit: function () {
-		//	this.r.moveCenter(this.marker.getLatLng());
-		//	this.map.fitBounds(this.r.getBounds());
 	},
 
 	jumpTo: function (search) {
@@ -397,7 +484,6 @@ Player.prototype = {
 			var p = new L.LatLng(geocode.lat[index], geocode.lng[index]);
 			this.marker.setLatLng(p);
 			this.map.setView(p, this.map.getZoom());
-			this.autofit();
 			return true;
 		} else {
 //			console.log('kenn ich leider nich ' + search); //FIX ME

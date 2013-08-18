@@ -142,6 +142,7 @@ body, .leaflet-container, input, button, select, textarea {
 		#progress {
 			height: 4px;
 			margin: 0;
+			margin-bottom: 3px;
 			background-color: #767676;
 		}
 
@@ -168,7 +169,7 @@ body, .leaflet-container, input, button, select, textarea {
 			font-family: FontAwesome !important;
 			background:#353535;
 			color:#eeeeee !important;
-			margin-top: 4px;
+			margin-top: 2px;
 		}
 
 		#foot button:hover {
@@ -189,3 +190,129 @@ body, .leaflet-container, input, button, select, textarea {
 			font-size: 10px;
 			padding-left: 8px;
 		}
+
+
+#embed-overlay {
+	display: none;
+	position: fixed;
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	bottom: 0px;
+	background-color: rgba(0, 0, 0, 0.7);
+	overflow-y: auto;
+	z-index: 10000;
+}
+	#embed-overlay .nav {
+		margin-bottom: 0;
+	}
+
+	#embed-content {
+		display: block;
+		position: relative;
+		width: 85%;
+		background-color: #fff;
+		margin: 10px auto;
+		padding: 10px;
+		border-radius: 6px;
+		box-shadow: 0px 0px 50px -15px rgba(0, 0, 0, 0.9);
+		text-align: center;
+	}
+
+	#embed-content .btn{
+		width: 120px;
+	}
+
+	#tab-share {
+		padding: 10px;
+	}
+
+		#tab-share .btn {
+			margin: 8px;
+		}
+
+	#tab-embed{
+		text-align: left;
+	}
+
+		#form-search {
+			margin-bottom: 3px;
+		}
+
+		#embed-content input {
+			margin-left: 8px;
+		}
+
+		#embed-content form {
+			margin-bottom: 8px;
+		}
+
+		#embed-content fieldset {
+			margin: 0;
+			margin-top: 4px;
+			margin-bottom: 4px;
+		}
+
+		#embed-content fieldset legend {
+			margin-top: 8px;
+			margin-bottom: 8px;
+			font-size: 16px;
+			line-height: 28px;
+			border-bottom-style: none;
+		}
+
+		#embed-content h5 {
+			margin-top: 14px;
+			margin-bottom: 0px;
+		}
+
+		#embed-content code {
+			display: block;
+			position: relative;
+			margin: 0;
+			padding: 4px;
+			white-space: normal;
+			font-size: 11px;
+			color: #444
+		}
+
+
+
+@media screen and (max-height: 380px) {
+
+	#embed-content {
+		padding-top: 2px;
+		padding-bottom: 2px;
+		margin: 2px auto;
+	}
+
+	#embed-content fieldset legend {
+		margin: 0;
+	}
+	#embed-content h5 {
+		margin-top: 8px;
+	}
+	#embed-content code {
+		font-size: 11px;
+		line-height: 11px;
+	}
+
+}
+
+i.icon-arrow-up {
+	animation: bobble 1.5s infinite;
+}
+
+@keyframes bobble {
+	0% {
+		transform: translate3d(0px, 5px, 0px);
+		animation-timing-function: ease-in;
+	}
+	50% {
+		transform: translate3d(0px, -5px, 0px);
+		animation-timing-function: ease-out;
+	}
+	100% {
+		transform: translate3d(0px, 5px, 0px);
+	}
+}
