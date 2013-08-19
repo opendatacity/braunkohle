@@ -197,7 +197,6 @@
 
 		setScale: function (scale, duration, cb) {
 			this.scale = scale;
-			//console.log('setScale: ' + scale);
 			var pathanim = Raphael.animation({transform: 's' + scale}, duration || 0, '<', function () {
 				if (cb)
 					cb();
@@ -314,7 +313,6 @@
 
 		setTime: function (time) {
 			function init(path) {
-//				console.log(path);
 				var newPath = [];
 
 				// Finde Mittelpunkt
@@ -436,8 +434,6 @@
 					return times[a][0] - times[b][0];
 				});
 
-				//console.log(order);
-
 				return {
 					path: newPath,
 					times: times,
@@ -448,9 +444,7 @@
 
 			if (!this.originalPath) {
 				this.originalPath = init(this._path.attr('path'));
-				//console.log(this.originalPath);
 			}
-//			console.log(this.originalPath);
 
 			var
 				path = [],
@@ -502,13 +496,9 @@
 				result.push(['Z']);
 			}
 
-//			console.log(result);
-
-
 			//this.originalPath = path;
 			/*
 			 var p = this._path.attr('path');
-			 //if (time == 0) console.log(p);
 			 for (var i = 0; i < p.length-1; i++) {
 			 p[i][1] += (Math.random() - 0.5)*2;
 			 p[i][2] += (Math.random() - 0.5)*2;

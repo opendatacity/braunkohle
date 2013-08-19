@@ -76,8 +76,6 @@ function init() {
 				zoom = qz;
 		}
 		if (query.city) {
-			console.log(decodeURIComponent(query.city));
-
 			var qp = searchCity(decodeURIComponent(query.city));
 			if (!qp)
 				qp = searchCity(query.city);
