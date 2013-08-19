@@ -31,48 +31,6 @@
 	<source type="audio/mp3" src="/static/sound.mp3"/>
 </audio>
 
-
-<!-- embed helper overlay -->
-<div id="embed-overlay">
-	<div id="embed-content">
-		<ul class="nav nav-tabs">
-			<li><a href="#tab-share" data-toggle="tab">Teilen</a></li>
-			<li><a href="#tab-embed" data-toggle="tab">Einbetten</a></li>
-		</ul>
-		<div class="tab-content">
-			<div class="tab-pane active" id="tab-share">
-				<a class="btn social" id="social-twitter" href="javascript:;" target="_blank"><i class="icon-twitter"></i> Twitter</a>
-				<a class="btn social" id="social-fb" href="javascript:;" target="_blank"><i class="icon-facebook"></i> Facebook</a>
-			</div>
-			<div class="tab-pane" id="tab-embed">
-				<form name="embed-form" id="embed-form" action="javascript:;" method="post">
-					<fieldset id="embed-size" class="form-inline">
-						<legend>Größe</legend>
-						<label class="radio"><input type="radio" name="size" value="large" checked="checked"> Groß (800&times;520)</label>
-						<label class="radio"><input type="radio" name="size" value="medium"> Mittel (480&times;520)</label>
-						<label class="radio"><input type="radio" name="size" value="small"> Klein (360&times;360)</label>
-					</fieldset>
-					<fieldset class="form-inline">
-						<legend>Startpunkt</legend>
-						<label class="radio"><input type="radio" name="src" value="city"> Ort </label>
-						<input id="form-search" type="text" autocomplete="off" data-provide="typeahead" placeholder="Ort">
-						<label class="radio"><input type="radio" name="src" value="current" checked="checked"> Aktuelle Position</label>
-					</fieldset>
-					<!--<fieldset class="form-inline">-->
-					<!--<legend>{{lang}}</legend>-->
-					<!--<label class="radio"><input type="radio" name="lang" value="de" checked="checked"> Deutsch</label>-->
-					<!--<label class="radio"><input type="radio" name="lang" value="en"> English</label>-->
-					<!--<label class="radio"><input type="radio" name="lang" value="fr"> Français</label>-->
-					<!--</fieldset>-->
-					<h5>Einbettungs-Code</h5>
-					<code id="embed-code"></code>
-				</form>
-			</div>
-		</div>
-		<p><a id="form-close" href="javascript:;" class="btn btn-medium btn-primary">Schliessen</a></p></div>
-</div>
-
-
 <div id="border">
 	<div id="head">
 		<div class="form-inline">
@@ -132,6 +90,40 @@
 		<button class="pull-right" id="info" title="Infomationen zur App"><i class="icon-info"></i></button>
 		<button class="pull-right" id="share" title="App teilen"><i class="icon-share"></i> Teilen</button>
 	</div>
+</div>
+
+<!-- embed helper overlay -->
+<div id="embed-overlay">
+	<div id="embed-content">
+		<ul class="nav nav-tabs">
+			<li><a href="#tab-share" data-toggle="tab">Teilen</a></li>
+			<li><a href="#tab-embed" data-toggle="tab">Einbetten</a></li>
+		</ul>
+		<div class="tab-content">
+			<div class="tab-pane active" id="tab-share">
+				<a class="btn social" id="social-twitter" href="javascript:;" target="_blank"><i class="icon-twitter"></i> Twitter</a>
+				<a class="btn social" id="social-fb" href="javascript:;" target="_blank"><i class="icon-facebook"></i> Facebook</a>
+			</div>
+			<div class="tab-pane" id="tab-embed">
+				<form name="embed-form" id="embed-form" action="javascript:;" method="post">
+					<fieldset id="embed-size" class="form-inline">
+						<legend>Größe</legend>
+						<label class="radio"><input type="radio" name="size" value="large" checked="checked"> Groß (800&times;520)</label>
+						<label class="radio"><input type="radio" name="size" value="medium"> Mittel (480&times;520)</label>
+						<label class="radio"><input type="radio" name="size" value="small"> Klein (360&times;360)</label>
+					</fieldset>
+					<fieldset class="form-inline">
+						<legend>Startpunkt</legend>
+						<label class="radio"><input id="radio-city" type="radio" name="src" value="city"> Ort </label>
+						<input id="form-search" type="text" autocomplete="off" data-provide="typeahead" placeholder="Ort">
+						<label class="radio"><input id="radio-latlng" type="radio" name="src" value="current" checked="checked"> Aktuelle Position</label>
+					</fieldset>
+					<h5>Einbettungs-Code</h5>
+					<code id="embed-code"></code>
+				</form>
+			</div>
+		</div>
+		<p><a id="form-close" href="javascript:;" class="btn btn-medium btn-primary">Schliessen</a></p></div>
 </div>
 
 </body>

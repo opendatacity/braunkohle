@@ -76,10 +76,13 @@ function init() {
 				zoom = qz;
 		}
 		if (query.city) {
-			var qp = searchCity(query.city);
+			console.log(decodeURIComponent(query.city));
+
+			var qp = searchCity(decodeURIComponent(query.city));
+			if (!qp)
+				qp = searchCity(query.city);
 			if (qp) p = qp;
 		}
-		console.log(query.city);
 
 		if ((query.lat) && (query.lng)) {
 			qp = new L.LatLng(query.lat, query.lng);
@@ -155,6 +158,7 @@ function init() {
 	$('#search').typeahead({
 		source: geocode.name,
 		updater: function (item) {
+			player.hideTextOverlay();
 			player.jumpTo(item);
 			return item;
 		}
@@ -169,7 +173,6 @@ function initEmbed() {
 			embed_overlay.fadeIn('fast');
 		}
 	});
-
 	var clickIn = false;
 	embed_overlay.click(function (evt) {
 		if (!clickIn) {
@@ -184,14 +187,18 @@ function initEmbed() {
 		embed_overlay.fadeOut('fast');
 	});
 	var url = document.referrer || document.location.href;
-	$('#social-fb').attr('href', 'http://www.facebook.com/sharer/sharer.php?s=100&p[url]=' + encodeURIComponent(url) + '&p[title]=BlindText...');
-	$('#social-twitter').attr('href', 'https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=BlindText...');
-
+	$('#social-fb').attr('href', 'http://www.facebook.com/sharer/sharer.php?s=100&p[url]=' + encodeURIComponent(url) + '&p[title]=Lieber+im+Netz+baggern,+als+in+der+Lausitz+graben!+Das+Greenpeace+Braunkohle-Tool:');
+	$('#social-twitter').attr('href', 'https://twitter.com/intent/tweet?url=' + encodeURIComponent(url) + '&text=Lieber+im+Netz+baggern,+als+in+der+Lausitz+graben!+Das+Greenpeace+Braunkohle-Tool:');
+	var $f = $('#embed-form');
 	var formsearch = $('#form-search');
-	formsearch.typeahead({source: geocode.name});
-	if ($('#embed-form').length) {
-		var $f = $('#embed-form');
-		var $url = document.location.href;
+	formsearch.typeahead({
+		source: geocode.name,
+		updater: function (item) {
+			$('#radio-city').prop('checked', true);
+			return item;
+		}});
+	if ($f.length) {
+		var $url = (document.location.href || '').split('?')[0];
 		var embedCode = function () {
 			var $size = $('input:radio[name=size]:checked', $f).val();
 			var $src = $('input:radio[name=src]:checked', $f).val();
@@ -301,10 +308,10 @@ Player.prototype = {
 
 	initMap: function (latlng, zoom) {
 		this.map = L.map('map', {
-			maxBounds: [
-				[46, 5],
-				[56, 16]
-			],
+//			maxBounds: [
+//				[46, 5],
+//				[56, 16]
+//			],
 			minZoom: MINZOOM,
 			maxZoom: MAXZOOM,
 			attributionControl: false
@@ -326,7 +333,6 @@ Player.prototype = {
 	addMarker: function (latlng) {
 		var baggerIcon = L.icon({
 			iconUrl: BTN_IMG_URL,
-//		shadowUrl: BTN_IMG_URL,
 			iconSize: [60, 60], // size of the icon
 			shadowSize: [60, 60], // size of the shadow
 			iconAnchor: [30, 30], // point of the icon which will correspond to marker's location
@@ -401,7 +407,6 @@ Player.prototype = {
 				this.onEnd();
 			}
 			this.displayProgress();
-//			this.map.addLayer(this.marker);
 			return;
 		}
 		this.displayProgress();
@@ -421,9 +426,7 @@ Player.prototype = {
 	},
 
 	addOSMLayer: function () {
-//		L.tileLayer('http://api.tiles.mapbox.com/v3/gpde.map-82g35l8h' + '/{z}/{x}/{y}.png', {attribution: ''    }).addTo(this.map);
-		L.tileLayer('http://tiles.odcdn.de/europe' + '/{z}/{x}/{y}.png', {attribution: ''}).addTo(this.map);
-//		L.tileLayer('http://api.tiles.mapbox.com/v3/ffalt.map-63b7bl05' + '/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://mapbox.com">Mapbox</a>'	}).addTo(this.map);
+		L.tileLayer('http://api.tiles.mapbox.com/v3/gpde.map-82g35l8h' + '/{z}/{x}/{y}.png', {attribution: ''    }).addTo(this.map);
 	},
 
 	displayProgress: function () {
